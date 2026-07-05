@@ -86,7 +86,12 @@ practitioner can react to in a discovery session.
   content apart from the generation timestamp, or a documented deterministic
   mode for testing.
 - The parity sheet delta is zero for the synthetic baseline
-  (71,000,000 / 100,000,000 at 70.0%).
+  (71,000,000 / 100,000,000 at 70.0%) for every metric whose exact value
+  terminates: LTV, headroom, maximum debt at threshold, and debt capacity.
+  Minimum valuation at threshold (71,000,000 / 0.7) is a repeating decimal;
+  its delta is expected to be non-zero and must be labelled a
+  floating-point/precision artifact, never a defect or a rounded
+  "authoritative" value.
 - A workbook opened with no warnings in Excel/LibreOffice: no macros, no
   external references.
 - Citation fields in the workbook match the persisted model version exactly.
