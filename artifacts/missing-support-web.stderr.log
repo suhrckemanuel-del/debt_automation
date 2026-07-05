@@ -1,0 +1,102 @@
+⨯ Error: Workspace access denied: organization membership required.
+    at SqlitePersistence.assertMembership (src\lib\persistence\sqlite.ts:141:13)
+    at SqlitePersistence.assertWorkspaceAccess (src\lib\persistence\sqlite.ts:149:10)
+    at SqlitePersistence.getWorkspace (src\lib\persistence\sqlite.ts:209:10)
+    at SqlitePersistence.getDashboardSnapshot (src\lib\persistence\sqlite.ts:273:28)
+    at getSyntheticDashboard (src\lib\dashboard.ts:8:27)
+    at ProductLayout (src\app\(product)\layout.tsx:11:41)
+  139 |       .get(actor.organizationId, actor.userId);
+  140 |     if (!membership) {
+> 141 |       throw new Error("Workspace access denied: organization membership required.");
+      |             ^
+  142 |     }
+  143 |   }
+  144 | {
+  digest: '3655325598'
+}
+⨯ Error: Workspace access denied: organization membership required.
+    at SqlitePersistence.assertMembership (src\lib\persistence\sqlite.ts:141:13)
+    at SqlitePersistence.assertWorkspaceAccess (src\lib\persistence\sqlite.ts:149:10)
+    at SqlitePersistence.getWorkspace (src\lib\persistence\sqlite.ts:209:10)
+    at SqlitePersistence.getDashboardSnapshot (src\lib\persistence\sqlite.ts:273:28)
+    at getSyntheticDashboard (src\lib\dashboard.ts:8:27)
+    at AskPage (src\app\(product)\ask\page.tsx:29:41)
+  139 |       .get(actor.organizationId, actor.userId);
+  140 |     if (!membership) {
+> 141 |       throw new Error("Workspace access denied: organization membership required.");
+      |             ^
+  142 |     }
+  143 |   }
+  144 | {
+  digest: '2247666210'
+}
+[browser] Uncaught Error: Workspace access denied: organization membership required.
+    at SqlitePersistence.assertMembership (src\lib\persistence\sqlite.ts:141:13)
+    at SqlitePersistence.assertWorkspaceAccess (src\lib\persistence\sqlite.ts:149:10)
+    at SqlitePersistence.getWorkspace (src\lib\persistence\sqlite.ts:209:10)
+    at SqlitePersistence.getDashboardSnapshot (src\lib\persistence\sqlite.ts:273:28)
+    at getSyntheticDashboard (src\lib\dashboard.ts:8:27)
+    at ProductLayout (src\app\(product)\layout.tsx:11:41)
+    at resolveErrorDev (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:1919:105)
+    at processFullStringRow (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2502:221)
+    at progress (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2689:13)
+  139 |       .get(actor.organizationId, actor.userId);
+  140 |     if (!membership) {
+> 141 |       throw new Error("Workspace access denied: organization membership required.");
+      |             ^
+  142 |     }
+  143 |   }
+  144 |
+⨯ Error: Workspace access denied: organization membership required.
+    at SqlitePersistence.assertMembership (src\lib\persistence\sqlite.ts:141:13)
+    at SqlitePersistence.assertWorkspaceAccess (src\lib\persistence\sqlite.ts:149:10)
+    at SqlitePersistence.getWorkspace (src\lib\persistence\sqlite.ts:209:10)
+    at SqlitePersistence.getDashboardSnapshot (src\lib\persistence\sqlite.ts:273:28)
+    at getSyntheticDashboard (src\lib\dashboard.ts:8:27)
+    at ProductLayout (src\app\(product)\layout.tsx:11:41)
+  139 |       .get(actor.organizationId, actor.userId);
+  140 |     if (!membership) {
+> 141 |       throw new Error("Workspace access denied: organization membership required.");
+      |             ^
+  142 |     }
+  143 |   }
+  144 | {
+  digest: '3655325598'
+}
+⨯ Error: Workspace access denied: organization membership required.
+    at SqlitePersistence.assertMembership (src\lib\persistence\sqlite.ts:141:13)
+    at SqlitePersistence.assertWorkspaceAccess (src\lib\persistence\sqlite.ts:149:10)
+    at SqlitePersistence.getWorkspace (src\lib\persistence\sqlite.ts:209:10)
+    at SqlitePersistence.getDashboardSnapshot (src\lib\persistence\sqlite.ts:273:28)
+    at getSyntheticDashboard (src\lib\dashboard.ts:8:27)
+    at DashboardPage (src\app\(product)\dashboard\page.tsx:34:41)
+  139 |       .get(actor.organizationId, actor.userId);
+  140 |     if (!membership) {
+> 141 |       throw new Error("Workspace access denied: organization membership required.");
+      |             ^
+  142 |     }
+  143 |   }
+  144 | {
+  digest: '4025313570'
+}
+[browser] Uncaught Error: Workspace access denied: organization membership required.
+    at SqlitePersistence.assertMembership (src\lib\persistence\sqlite.ts:141:13)
+    at SqlitePersistence.assertWorkspaceAccess (src\lib\persistence\sqlite.ts:149:10)
+    at SqlitePersistence.getWorkspace (src\lib\persistence\sqlite.ts:209:10)
+    at SqlitePersistence.getDashboardSnapshot (src\lib\persistence\sqlite.ts:273:28)
+    at getSyntheticDashboard (src\lib\dashboard.ts:8:27)
+    at ProductLayout (src\app\(product)\layout.tsx:11:41)
+    at resolveErrorDev (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:1919:105)
+    at processFullStringRow (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2502:221)
+    at progress (file://C:/Users/User/Documents/debt automation/apps/web/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2689:13)
+  139 |       .get(actor.organizationId, actor.userId);
+  140 |     if (!membership) {
+> 141 |       throw new Error("Workspace access denied: organization membership required.");
+      |             ^
+  142 |     }
+  143 |   }
+  144 |

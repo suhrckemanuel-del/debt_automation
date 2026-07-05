@@ -1,0 +1,11 @@
+
+> web@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.87.120.113:3000
+✓ Ready in 507ms
+
+ GET /ask?answer=bb476fa0-42f4-4281-b760-bb8946fe0beb 500 in 447ms (next.js: 210ms, application-code: 237ms)
+ GET /dashboard?asOf=2026-07-02 500 in 227ms (next.js: 137ms, application-code: 90ms)

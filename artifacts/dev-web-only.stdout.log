@@ -1,0 +1,13 @@
+
+> web@0.1.0 dev:web:synthetic
+> cross-env AGREEMENT_DATA_BACKEND=sqlite AGREEMENT_SQLITE_PATH=.data/agreement-intelligence.db AGREEMENT_ALLOW_SYNTHETIC_SEED=true AGREEMENT_SYNTHETIC_MANIFEST=../../workspaces/demo/manifest.json AGREEMENT_ENGINE_API_URL=http://127.0.0.1:8765 next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.87.120.113:3000
+✓ Ready in 499ms
+
+ GET /ask?answer=bb476fa0-42f4-4281-b760-bb8946fe0beb 200 in 652ms (next.js: 195ms, application-code: 457ms)
+ GET /dashboard?asOf=2026-07-02 200 in 239ms (next.js: 43ms, application-code: 196ms)
+ GET /dashboard?asOf=2026-07-02 200 in 211ms (next.js: 5ms, application-code: 206ms)
+ GET /ask?answer=bb476fa0-42f4-4281-b760-bb8946fe0beb 200 in 99ms (next.js: 4ms, application-code: 95ms)

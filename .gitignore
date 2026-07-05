@@ -1,0 +1,36 @@
+# Populated research records stay local by default.
+docs/phase-1/evidence_log.csv
+docs/phase-1/outreach_tracker.csv
+docs/phase-1/sessions/session-P*.md
+docs/phase-1/private/
+
+# Common local artifacts.
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Python runtime artifacts.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Next.js and local synthetic persistence artifacts.
+apps/web/.next/
+apps/web/node_modules/
+apps/web/.data/
+apps/web/.env*.local
+apps/web/test-results/
+apps/web/playwright-report/
+
+# Remotion demo-video build dependencies stay local.
+artifacts/demo-showcase/remotion/node_modules/
+artifacts/demo-showcase/remotion/out/
+
+# Local pilot workspaces may contain sensitive titles or extracted text.
+workspaces/*
+!workspaces/demo/
+!workspaces/demo/manifest.json

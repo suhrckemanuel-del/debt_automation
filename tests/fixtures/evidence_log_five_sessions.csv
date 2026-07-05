@@ -1,0 +1,6 @@
+participant_id,session_date,role_category,serious_session,recent_real_example,maps_to_recurring_pain,specific_workaround,manual_task_minutes,manual_time_observed,pack_review_minutes,pack_time_observed,manual_material_corrections,pack_material_corrections,citation_trust_effect,missing_info_trust_effect,judgment_boundary_effect,total_time_saving_meaningful,preferred_output,next_step,existing_tools_sufficient,confidentiality_system_blocker,legal_compliance_blocker,human_in_loop_required,adapt_signal,stop_signal
+PTEST01,2026-01-01,analyst,yes,yes,yes,yes,20,yes,8,yes,1,0,improved,improved,improved,yes,direct_answer,follow_up_requested,no,manageable,none,yes,none,none
+PTEST02,2026-01-02,reviewer,yes,yes,yes,yes,25,yes,10,yes,1,0,improved,improved,improved,yes,clause_pack,introduction_offered,no,manageable,none,yes,clause_pack,none
+PTEST03,2026-01-03,both,yes,yes,yes,no,18,yes,9,yes,0,0,neutral,improved,improved,yes,direct_answer,no_next_step,no,none,none,yes,none,none
+PTEST04,2026-01-04,analyst,yes,yes,no,no,15,no,10,yes,0,0,neutral,neutral,neutral,no,covenant_calendar,no_next_step,unclear,manageable,none,yes,covenant_calendar,none
+PTEST05,2026-01-05,reviewer,yes,yes,no,no,22,no,12,yes,0,0,improved,neutral,improved,unclear,direct_answer,no_next_step,no,none,none,yes,none,none

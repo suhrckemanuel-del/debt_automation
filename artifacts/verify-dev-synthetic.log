@@ -1,0 +1,37 @@
+
+> web@0.1.0 dev:synthetic
+> concurrently --kill-others --names engine,web --prefix-colors yellow,cyan "npm:dev:engine" "npm:dev:web:synthetic"
+
+[web] 
+[web] > web@0.1.0 dev:web:synthetic
+[web] > cross-env AGREEMENT_DATA_BACKEND=sqlite AGREEMENT_SQLITE_PATH=.data/agreement-intelligence.db AGREEMENT_ALLOW_SYNTHETIC_SEED=true AGREEMENT_SYNTHETIC_MANIFEST=../../workspaces/demo/manifest.json AGREEMENT_ENGINE_API_URL=http://127.0.0.1:8765 next dev
+[web] 
+[engine] 
+[engine] > web@0.1.0 dev:engine
+[engine] > python ../../app.py api --port 8765
+[engine] 
+[web] ▲ Next.js 16.2.10 (Turbopack)
+[web] - Local:         http://localhost:3000
+[web] - Network:       http://100.87.120.113:3000
+[web] ✓ Ready in 618ms
+[web] 
+[web]  GET /dashboard 200 in 763ms (next.js: 230ms, application-code: 534ms)
+[web]  GET /dashboard 200 in 137ms (next.js: 4ms, application-code: 133ms)
+[web]  GET /dashboard?asOf=2026-04-01 200 in 139ms (next.js: 5ms, application-code: 135ms)
+[web]  GET /dashboard?asOf=2026-07-02 200 in 129ms (next.js: 3ms, application-code: 126ms)
+[web]  GET /dashboard?asOf=2026-10-01 200 in 104ms (next.js: 3ms, application-code: 101ms)
+[web]  GET /dashboard?asOf=2027-01-02 200 in 107ms (next.js: 3ms, application-code: 104ms)
+[web]  GET /ask 200 in 225ms (next.js: 48ms, application-code: 177ms)
+[web]  GET /workspaces 200 in 107ms (next.js: 41ms, application-code: 66ms)
+[web]  GET /documents 200 in 119ms (next.js: 36ms, application-code: 83ms)
+[web]  GET /provision-map 200 in 117ms (next.js: 30ms, application-code: 86ms)
+[web]  GET /activity 200 in 101ms (next.js: 29ms, application-code: 72ms)
+[web]  GET /settings 200 in 137ms (next.js: 38ms, application-code: 99ms)
+[web]  GET /dashboard-legacy 200 in 155ms (next.js: 35ms, application-code: 121ms)
+[web]  GET / 307 in 477ms (next.js: 430ms, application-code: 48ms)
+[web]  GET /ask 200 in 101ms (next.js: 3ms, application-code: 97ms)
+[web]  GET /dashboard 200 in 112ms (next.js: 3ms, application-code: 109ms)
+[engine] npm run dev:engine exited with code 4294967295
+--> Sending SIGTERM to other processes..
+[web] [?25h
+[web] npm run dev:web:synthetic exited with code 4294967295

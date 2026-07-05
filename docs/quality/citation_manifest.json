@@ -1,0 +1,138 @@
+[
+  {
+    "id": "SRC-001",
+    "questions": [1],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 10.2",
+    "page": 14,
+    "exact_text": "The Borrower shall ensure that the Loan-to-Value Ratio does not exceed 65.0% on any Test Date."
+  },
+  {
+    "id": "SRC-002",
+    "questions": [1],
+    "source_path": "docs/phase-1/synthetic-corpus/amendment_letter_1.md",
+    "locator": "Section 2.1",
+    "page": 2,
+    "exact_text": "For each Test Date occurring on or after the Effective Date and on or before 31 December 2026, the reference to 65.0% in Clause 10.2 (Loan-to-Value Ratio) of the Facility Agreement shall be replaced by 70.0%."
+  },
+  {
+    "id": "SRC-003",
+    "questions": [1],
+    "source_path": "docs/phase-1/synthetic-corpus/waiver_letter.md",
+    "locator": "Section 2.1",
+    "page": 2,
+    "exact_text": "Subject to Section 3, the Lender waives any Default arising solely from the Loan-to-Value Ratio exceeding 70.0%, but not exceeding 72.0%, on the Test Date falling on 30 June 2026."
+  },
+  {
+    "id": "SRC-004",
+    "questions": [1],
+    "source_path": "docs/phase-1/synthetic-corpus/waiver_letter.md",
+    "locator": "Section 2.1",
+    "page": 2,
+    "exact_text": "This waiver applies only to that Test Date and does not amend the Loan-to-Value Ratio threshold in Clause 10.2 of the Facility Agreement as amended by Amendment Letter No. 1."
+  },
+  {
+    "id": "SRC-005",
+    "questions": [2, 3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 13.1",
+    "page": 19,
+    "exact_text": "The Borrower shall not make a Distribution unless that Distribution is a Permitted Distribution."
+  },
+  {
+    "id": "SRC-006",
+    "questions": [2, 3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "**Permitted Distribution** means a Distribution made from Available Cash where:"
+  },
+  {
+    "id": "SRC-007",
+    "questions": [2, 3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "(a) no Default is continuing or would result from the Distribution;"
+  },
+  {
+    "id": "SRC-008",
+    "questions": [2, 3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "(b) the Loan-to-Value Ratio, calculated immediately after the Distribution using the most recent Valuation, does not exceed 60.0%; and"
+  },
+  {
+    "id": "SRC-009",
+    "questions": [2, 3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "(c) the Borrower has delivered to the Lender a compliance statement showing the calculation at least five Business Days before the proposed Distribution."
+  },
+  {
+    "id": "SRC-010",
+    "questions": [2, 3],
+    "source_path": "docs/phase-1/synthetic-corpus/waiver_letter.md",
+    "locator": "Section 3",
+    "page": 2,
+    "exact_text": "the Borrower making no Distribution from the Effective Date to and including 30 September 2026;"
+  },
+  {
+    "id": "SRC-011",
+    "questions": [3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 12.3",
+    "page": 18,
+    "exact_text": "The Borrower shall not make a Disposal unless that Disposal is a Permitted Disposal or the Lender has given prior written consent."
+  },
+  {
+    "id": "SRC-012",
+    "questions": [3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "**Permitted Disposal** means a Disposal:"
+  },
+  {
+    "id": "SRC-013",
+    "questions": [3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "(a) made on arm's-length terms for fair market value;"
+  },
+  {
+    "id": "SRC-014",
+    "questions": [3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "(b) where the aggregate Net Disposal Proceeds of that Disposal and all related Disposals do not exceed EUR 1,000,000 in the relevant financial year; and"
+  },
+  {
+    "id": "SRC-015",
+    "questions": [3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "(c) which is not made while a Default is continuing,"
+  },
+  {
+    "id": "SRC-016",
+    "questions": [3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 1.1",
+    "page": 3,
+    "exact_text": "or any other Disposal to which the Lender has given prior written consent."
+  },
+  {
+    "id": "SRC-017",
+    "questions": [3],
+    "source_path": "docs/phase-1/synthetic-corpus/facility_agreement.md",
+    "locator": "Clause 6.4",
+    "page": 9,
+    "exact_text": "The Borrower shall apply all Net Disposal Proceeds arising from a Disposal, other than a Permitted Disposal, in mandatory prepayment of the Loan within five Business Days after receipt."
+  }
+]

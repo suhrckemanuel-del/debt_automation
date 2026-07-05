@@ -1,0 +1,61 @@
+
+> web@0.1.0 dev:web:synthetic
+> cross-env AGREEMENT_DATA_BACKEND=sqlite AGREEMENT_SQLITE_PATH=.data/agreement-intelligence.db AGREEMENT_ALLOW_SYNTHETIC_SEED=true AGREEMENT_SYNTHETIC_MANIFEST=../../workspaces/demo/manifest.json AGREEMENT_ENGINE_API_URL=http://127.0.0.1:8765 next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://100.87.120.113:3000
+✓ Ready in 463ms
+
+ GET /dashboard?asOf=2026-07-02 200 in 716ms (next.js: 187ms, application-code: 529ms)
+ GET /dashboard?asOf=2026-07-02 200 in 141ms (next.js: 6ms, application-code: 135ms)
+ GET /settings 200 in 167ms (next.js: 51ms, application-code: 116ms)
+ POST /settings 200 in 52ms (next.js: 4ms, application-code: 48ms)
+  └─ ƒ updateWorkspaceName({}) in 3ms src/app/(product)/settings/actions.ts
+ GET /activity 200 in 101ms (next.js: 34ms, application-code: 67ms)
+ GET /settings 200 in 100ms (next.js: 4ms, application-code: 96ms)
+ GET /dashboard?asOf=2026-07-02 200 in 102ms (next.js: 4ms, application-code: 99ms)
+ GET /documents 200 in 66ms (next.js: 42ms, application-code: 24ms)
+ GET /provision-map 200 in 121ms (next.js: 41ms, application-code: 80ms)
+✓ Compiled in 508ms
+ GET /provision-map 200 in 321ms (next.js: 79ms, application-code: 242ms)
+ GET /provision-map 200 in 225ms (next.js: 5ms, application-code: 221ms)
+ GET /provision-map 200 in 183ms (next.js: 6ms, application-code: 177ms)
+ GET /provision-map 200 in 183ms (next.js: 37ms, application-code: 146ms)
+ GET /provision-map 200 in 183ms (next.js: 70ms, application-code: 113ms)
+ GET /provision-map 200 in 199ms (next.js: 5ms, application-code: 194ms)
+ GET /provision-map 200 in 200ms (next.js: 3ms, application-code: 197ms)
+ GET /provision-map 200 in 197ms (next.js: 5ms, application-code: 192ms)
+ GET /provision-map 200 in 165ms (next.js: 3ms, application-code: 161ms)
+ GET /provision-map 200 in 166ms (next.js: 32ms, application-code: 134ms)
+ GET /provision-map 200 in 166ms (next.js: 63ms, application-code: 103ms)
+ GET /provision-map 200 in 181ms (next.js: 4ms, application-code: 176ms)
+ GET /provision-map 200 in 145ms (next.js: 4ms, application-code: 141ms)
+ GET /provision-map 200 in 111ms (next.js: 3ms, application-code: 107ms)
+ GET /provision-map 200 in 80ms (next.js: 5ms, application-code: 75ms)
+ GET /provision-map 200 in 80ms (next.js: 39ms, application-code: 41ms)
+ GET /dashboard?asOf=2026-07-02 200 in 378ms (next.js: 110ms, application-code: 268ms)
+✓ Compiled in 71ms
+ GET /dashboard?asOf=2026-07-02 200 in 313ms (next.js: 128ms, application-code: 186ms)
+ GET /dashboard?asOf=2026-07-02 200 in 64ms (next.js: 9ms, application-code: 56ms)
+ GET /dashboard?asOf=2026-07-02 200 in 201ms (next.js: 5ms, application-code: 196ms)
+ GET /documents 200 in 123ms (next.js: 76ms, application-code: 47ms)
+ GET /settings 200 in 265ms (next.js: 92ms, application-code: 173ms)
+ POST /settings 200 in 36ms (next.js: 3ms, application-code: 33ms)
+  └─ ƒ updateWorkspaceName({"message":"","status":"idle"}, {}) in 2ms src/app/(product)/settings/actions.ts
+ GET /workspaces 200 in 92ms (next.js: 32ms, application-code: 60ms)
+ GET /ask 200 in 184ms (next.js: 37ms, application-code: 147ms)
+ GET /documents 200 in 77ms (next.js: 4ms, application-code: 73ms)
+✓ Compiled in 53ms
+ GET /documents 200 in 167ms (next.js: 62ms, application-code: 106ms)
+ GET /documents 200 in 42ms (next.js: 4ms, application-code: 38ms)
+ GET /dashboard?asOf=2026-07-02 200 in 426ms (next.js: 104ms, application-code: 322ms)
+ GET /dashboard?asOf=2026-04-01 200 in 104ms (next.js: 4ms, application-code: 100ms)
+ GET /dashboard?asOf=2027-01-02 200 in 102ms (next.js: 3ms, application-code: 99ms)
+ GET /dashboard?asOf=2026-07-02 200 in 96ms (next.js: 5ms, application-code: 90ms)
+ GET /ask?answer=be41d31e-46b3-452f-b15a-137d85411be7 200 in 115ms (next.js: 16ms, application-code: 99ms)
+ GET /ask?answer=af9e309a-0c17-404f-8298-f1f18b7253dd 200 in 79ms (next.js: 3ms, application-code: 76ms)
+ GET /ask?answer=bb476fa0-42f4-4281-b760-bb8946fe0beb 200 in 83ms (next.js: 4ms, application-code: 79ms)
+ GET /dashboard 200 in 138ms (next.js: 6ms, application-code: 132ms)
+ GET /dashboard 200 in 109ms (next.js: 3ms, application-code: 106ms)
+[?25h

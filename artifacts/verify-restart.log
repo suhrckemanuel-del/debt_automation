@@ -1,0 +1,23 @@
+
+> web@0.1.0 dev:synthetic
+> concurrently --kill-others --names engine,web --prefix-colors yellow,cyan "npm:dev:engine" "npm:dev:web:synthetic"
+
+[engine] 
+[engine] > web@0.1.0 dev:engine
+[engine] > python ../../app.py api --port 8765
+[engine] 
+[web] 
+[web] > web@0.1.0 dev:web:synthetic
+[web] > cross-env AGREEMENT_DATA_BACKEND=sqlite AGREEMENT_SQLITE_PATH=.data/agreement-intelligence.db AGREEMENT_ALLOW_SYNTHETIC_SEED=true AGREEMENT_SYNTHETIC_MANIFEST=../../workspaces/demo/manifest.json AGREEMENT_ENGINE_API_URL=http://127.0.0.1:8765 next dev
+[web] 
+[web] ▲ Next.js 16.2.10 (Turbopack)
+[web] - Local:         http://localhost:3000
+[web] - Network:       http://100.87.120.113:3000
+[web] ✓ Ready in 509ms
+[web] 
+[web]  GET /dashboard 200 in 718ms (next.js: 191ms, application-code: 527ms)
+[web]  GET /ask 200 in 222ms (next.js: 48ms, application-code: 174ms)
+[engine] npm run dev:engine exited with code 4294967295
+--> Sending SIGTERM to other processes..
+[web] [?25h
+[web] npm run dev:web:synthetic exited with code 4294967295

@@ -1,0 +1,219 @@
+{
+  "cases": [
+    {
+      "case_id": "B001_CURRENT_LTV",
+      "question": "What is the current maximum LTV, considering amendments or waivers?",
+      "as_of": "2026-07-02",
+      "expected_status": "supported",
+      "required_substrings": [
+        "current contractual threshold",
+        "70.0%",
+        "limited waiver relief",
+        "does not change the contractual threshold"
+      ],
+      "forbidden_substrings": [
+        "the current contractual threshold is 72.0%"
+      ],
+      "required_locators": [
+        "Clause 10.2",
+        "Section 2.1"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B002_POST_AMENDMENT_LTV",
+      "question": "What is the current maximum LTV?",
+      "as_of": "2027-01-02",
+      "expected_status": "supported",
+      "required_substrings": [
+        "65.0%"
+      ],
+      "forbidden_substrings": [
+        "limited waiver relief"
+      ],
+      "required_locators": [
+        "Clause 10.2",
+        "Section 2.1"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B003_DISTRIBUTIONS_CURRENT",
+      "question": "Are distributions restricted, and where are Permitted Distributions defined?",
+      "as_of": "2026-07-02",
+      "expected_status": "supported",
+      "required_substrings": [
+        "restricts distributions",
+        "prohibits any distribution"
+      ],
+      "required_locators": [
+        "Clause 13.1",
+        "Clause 1.1",
+        "Section 3"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B004_DISTRIBUTIONS_AFTER_WAIVER",
+      "question": "Are distributions restricted?",
+      "as_of": "2026-10-01",
+      "expected_status": "supported",
+      "required_substrings": [
+        "relevant exception or definition"
+      ],
+      "forbidden_substrings": [
+        "also prohibits any distribution"
+      ],
+      "required_locators": [
+        "Clause 13.1",
+        "Clause 1.1"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B005_JUDGMENT_BOUNDARY",
+      "question": "Can the borrower sell part of the asset and distribute the proceeds?",
+      "as_of": "2026-07-02",
+      "expected_status": "legal_review_required",
+      "required_substrings": [
+        "no final yes/no conclusion",
+        "mandatory prepayment",
+        "insufficient"
+      ],
+      "required_locators": [
+        "Clause 12.3",
+        "Clause 1.1",
+        "Clause 6.4",
+        "Clause 13.1",
+        "Section 3"
+      ],
+      "human_review_required": true
+    },
+    {
+      "case_id": "B006_SOURCE_NOT_FOUND",
+      "question": "Does the facility require a debt yield covenant?",
+      "as_of": "2026-07-02",
+      "expected_status": "source_not_found",
+      "required_substrings": [
+        "source not found."
+      ],
+      "required_locators": [],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B007_ORIGINAL_AND_CURRENT",
+      "question": "What was the original LTV and what is the current threshold?",
+      "as_of": "2026-07-02",
+      "expected_status": "supported",
+      "required_substrings": [
+        "original maximum ltv was 65.0%",
+        "70.0%"
+      ],
+      "required_locators": [
+        "Clause 10.2",
+        "Section 2.1"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B008_DIFFERENT_TEST_DATE",
+      "question": "What is the current LTV threshold for the test date?",
+      "as_of": "2026-07-02",
+      "test_date": "2026-12-31",
+      "expected_status": "supported",
+      "required_substrings": [
+        "70.0%"
+      ],
+      "forbidden_substrings": [
+        "limited waiver relief"
+      ],
+      "required_locators": [
+        "Clause 10.2",
+        "Section 2.1"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B009_BEFORE_AMENDMENT",
+      "question": "What is the current maximum LTV?",
+      "as_of": "2026-04-01",
+      "expected_status": "supported",
+      "required_substrings": [
+        "65.0%"
+      ],
+      "forbidden_substrings": [
+        "limited waiver relief",
+        "current contractual threshold for the relevant test date is 70.0%"
+      ],
+      "required_locators": [
+        "Clause 10.2"
+      ],
+      "forbidden_locators": [
+        "Section 2.1"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B010_EXACT_WAIVER_TEST_DATE",
+      "question": "What is the current maximum LTV including waiver relief?",
+      "as_of": "2026-07-02",
+      "test_date": "2026-06-30",
+      "expected_status": "supported",
+      "required_substrings": [
+        "70.0%",
+        "72.0%",
+        "does not change the contractual threshold"
+      ],
+      "required_locators": [
+        "Clause 10.2",
+        "Section 2.1"
+      ],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B011_TRANSACTION_AFTER_WAIVER",
+      "question": "Can the borrower sell part of the asset and distribute the proceeds?",
+      "as_of": "2026-10-01",
+      "expected_status": "legal_review_required",
+      "required_substrings": [
+        "no final yes/no conclusion",
+        "mandatory prepayment"
+      ],
+      "required_locators": [
+        "Clause 12.3",
+        "Clause 6.4",
+        "Clause 13.1"
+      ],
+      "forbidden_locators": [
+        "Section 3"
+      ],
+      "human_review_required": true
+    },
+    {
+      "case_id": "B012_RELATIONSHIP_MANAGER_UNKNOWN",
+      "question": "Who is the relationship manager at the lender?",
+      "as_of": "2026-07-02",
+      "expected_status": "source_not_found",
+      "required_substrings": [
+        "source not found."
+      ],
+      "required_locators": [],
+      "human_review_required": false
+    },
+    {
+      "case_id": "B013_WAIVER_END_DATE_INCLUSIVE",
+      "question": "Are distributions restricted?",
+      "as_of": "2026-09-30",
+      "expected_status": "supported",
+      "required_substrings": [
+        "also prohibits any distribution"
+      ],
+      "required_locators": [
+        "Clause 13.1",
+        "Clause 1.1",
+        "Section 3"
+      ],
+      "human_review_required": false
+    }
+  ]
+}
