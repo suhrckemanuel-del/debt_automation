@@ -6,10 +6,13 @@ import { SQLITE_SCHEMA } from "./sqlite-schema";
 import { seedSyntheticDemo } from "./synthetic-seed";
 import type {
   ActivateMappingDraftInput,
+  ActiveMappingView,
   ActorContext,
   AuditEventRecord,
   DashboardSnapshot,
+  DocumentDetail,
   DocumentRecord,
+  DocumentReference,
   PassageEvidence,
   Persistence,
   PersistedAnswer,
@@ -487,6 +490,200 @@ export class SqlitePersistence implements Persistence {
       page: Number(row.page_number),
       text: String(row.passage_text),
       sourcePath: String(row.source_path),
+    };
+  }
+
+  private activeManifestSnapshot(
+    workspaceId: string,
+  ): Record<string, unknown> | null {
+    const row = this.database
+      .prepare(
+        `SELECT mv.snapshot_json
+         FROM workspaces w
+         JOIN manifest_versions mv
+           ON mv.workspace_id = w.id
+          AND mv.version = w.active_manifest_version
+         WHERE w.id = ?`,
+      )
+      .get(workspaceId) as { snapshot_json: string } | undefined;
+    return row ? parseJsonObject(row.snapshot_json) : null;
+  }
+
+  private documentRelationships(
+    workspaceId: string,
+    documentExternalId: string,
+  ): DocumentReference[] {
+    const snapshot = this.activeManifestSnapshot(workspaceId);
+    const declared = Array.isArray(snapshot?.documents)
+      ? (snapshot.documents as Record<string, unknown>[])
+      : [];
+    const byRelationship = new Map<string, DocumentReference["relationship"]>();
+    const claim = (
+      externalId: unknown,
+      relationship: DocumentReference["relationship"],
+    ) => {
+      if (
+        typeof externalId !== "string" ||
+        externalId === documentExternalId ||
+        externalId.length === 0
+      ) {
+        return;
+      }
+      // Modification relationships are more specific than "related".
+      const existing = byRelationship.get(externalId);
+      if (!existing || existing === "related") {
+        byRelationship.set(externalId, relationship);
+      }
+    };
+    for (const entry of declared) {
+      const entryId = entry.document_id;
+      if (entryId === documentExternalId) {
+        claim(entry.modifies_document_id, "modifies");
+        if (Array.isArray(entry.related_document_ids)) {
+          for (const related of entry.related_document_ids) {
+            claim(related, "related");
+          }
+        }
+      } else {
+        if (entry.modifies_document_id === documentExternalId) {
+          claim(entryId, "modified_by");
+        }
+        if (
+          Array.isArray(entry.related_document_ids) &&
+          entry.related_document_ids.includes(documentExternalId)
+        ) {
+          claim(entryId, "related");
+        }
+      }
+    }
+    if (byRelationship.size === 0) {
+      return [];
+    }
+    // Only reference documents that remain persisted in this workspace.
+    return this.listDocuments(workspaceId)
+      .filter((document) => byRelationship.has(document.externalId))
+      .map((document) => ({
+        externalId: document.externalId,
+        title: document.title,
+        documentType: document.documentType,
+        relationship: byRelationship.get(document.externalId)!,
+      }));
+  }
+
+  getDocumentDetail(
+    actor: ActorContext,
+    workspaceId: string,
+    documentExternalId: string,
+  ): DocumentDetail | null {
+    this.assertWorkspaceAccess(actor, workspaceId);
+    const row = this.database
+      .prepare(
+        `SELECT d.*,
+          (SELECT count(*) FROM passages p WHERE p.document_id = d.id)
+            AS passage_count
+         FROM documents d
+         WHERE d.workspace_id = ? AND d.external_id = ?`,
+      )
+      .get(workspaceId, documentExternalId) as
+      | Record<string, SqlValue>
+      | undefined;
+    if (!row) {
+      return null;
+    }
+    const passages = this.database
+      .prepare(
+        `SELECT id, locator, page_number, heading, passage_text
+         FROM passages
+         WHERE workspace_id = ? AND document_id = ?
+         ORDER BY page_number, locator`,
+      )
+      .all(workspaceId, String(row.id)) as Record<string, SqlValue>[];
+    return {
+      id: String(row.id),
+      workspaceId: String(row.workspace_id),
+      externalId: String(row.external_id),
+      title: String(row.title),
+      documentType: String(row.document_type),
+      effectiveDate: String(row.effective_date),
+      executionDate: String(row.execution_date),
+      currentStatus: String(row.current_status),
+      storageKey: row.storage_key === null ? null : String(row.storage_key),
+      sourcePath: String(row.source_path),
+      passageCount: Number(row.passage_count),
+      passages: passages.map((passage) => ({
+        id: String(passage.id),
+        locator: String(passage.locator),
+        page: Number(passage.page_number),
+        heading: String(passage.heading),
+        text: String(passage.passage_text),
+      })),
+      relatedDocuments: this.documentRelationships(
+        workspaceId,
+        documentExternalId,
+      ),
+    };
+  }
+
+  getActiveMappingView(
+    actor: ActorContext,
+    workspaceId: string,
+  ): ActiveMappingView | null {
+    this.assertWorkspaceAccess(actor, workspaceId);
+    const manifest = this.database
+      .prepare(
+        `SELECT mv.version, mv.activated_at, mv.source_draft_id,
+                md.expected_slot_count
+         FROM workspaces w
+         JOIN manifest_versions mv
+           ON mv.workspace_id = w.id
+          AND mv.version = w.active_manifest_version
+         LEFT JOIN mapping_drafts md ON md.id = mv.source_draft_id
+         WHERE w.id = ? AND w.organization_id = ?`,
+      )
+      .get(workspaceId, actor.organizationId) as
+      | {
+          version: number;
+          activated_at: string;
+          source_draft_id: string | null;
+          expected_slot_count: number | null;
+        }
+      | undefined;
+    if (!manifest?.source_draft_id) {
+      return null;
+    }
+    const rows = this.database
+      .prepare(
+        `SELECT s.slot_key, s.locator, s.exact_quote, s.reviewed_at,
+                d.external_id, d.title, p.page_number, p.passage_text
+         FROM mapping_draft_slots s
+         JOIN documents d ON d.id = s.document_id
+         JOIN passages p ON p.id = s.passage_id
+         WHERE s.draft_id = ? AND s.validation_error IS NULL
+         ORDER BY s.slot_key`,
+      )
+      .all(manifest.source_draft_id) as Record<string, SqlValue>[];
+    const slots = rows.map((row) => {
+      const exactQuote = String(row.exact_quote);
+      if (!String(row.passage_text).includes(exactQuote)) {
+        throw new Error(
+          `Activated mapping quote is not an exact persisted excerpt: ${String(row.slot_key)}.`,
+        );
+      }
+      return {
+        slotKey: String(row.slot_key),
+        documentExternalId: String(row.external_id),
+        documentTitle: String(row.title),
+        locator: String(row.locator),
+        page: Number(row.page_number),
+        exactQuote,
+        reviewedAt: row.reviewed_at === null ? null : String(row.reviewed_at),
+      };
+    });
+    return {
+      manifestVersion: Number(manifest.version),
+      activatedAt: String(manifest.activated_at),
+      expectedSlotCount: Number(manifest.expected_slot_count ?? slots.length),
+      slots,
     };
   }
 

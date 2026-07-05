@@ -53,6 +53,10 @@ The hosted data model is versioned under [`supabase`](supabase/README.md) but is
 not deployed. No cloud credentials or real agreements are part of this
 milestone.
 
+`npm run demo:reset` (from `apps/web`, with the engine running) restores the
+synthetic demonstration state deterministically; see
+[`apps/web/README.md`](apps/web/README.md) for its safety guards.
+
 ## Product and quality documents
 
 - Owner-directed build decision: [`docs/implementation/prototype_decision.md`](docs/implementation/prototype_decision.md)

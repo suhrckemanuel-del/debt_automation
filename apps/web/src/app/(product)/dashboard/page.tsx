@@ -15,6 +15,7 @@ import {
   normalizeDecisionDate,
 } from "@/lib/decision-surface";
 import { getSyntheticDashboard } from "@/lib/dashboard";
+import { passageHref } from "@/lib/evidence-links";
 import {
   getPersistence,
   localSyntheticActor,
@@ -162,7 +163,10 @@ export default async function DashboardPage({
                     {change.summary}
                   </p>
                   <Link
-                    href={`#evidence-${change.evidence.passageId}`}
+                    href={passageHref(
+                      change.evidence.documentId,
+                      change.evidence.locator,
+                    )}
                     className="mt-1.5 inline-block font-mono text-[11px] text-primary hover:underline"
                   >
                     Inspect {change.evidence.locator} · p.
@@ -247,8 +251,7 @@ export default async function DashboardPage({
                 key={item.passageId}
                 id={`evidence-${item.passageId}`}
                 open={
-                  surface.recommendation.href ===
-                  `#evidence-${item.passageId}`
+                  surface.recommendation.evidencePassageId === item.passageId
                 }
                 className="group scroll-mt-24 py-4 target:bg-primary/5"
               >
@@ -270,10 +273,10 @@ export default async function DashboardPage({
                   {item.text}
                 </blockquote>
                 <Link
-                  href={`/documents#${item.documentId}`}
+                  href={passageHref(item.documentId, item.locator)}
                   className="mt-3 inline-block text-xs text-primary hover:underline"
                 >
-                  View document metadata
+                  Open in document record
                 </Link>
               </details>
             )) : (

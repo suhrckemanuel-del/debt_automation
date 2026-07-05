@@ -26,6 +26,10 @@ apps/web/.env*.local
 apps/web/test-results/
 apps/web/playwright-report/
 
+# Local run/verification logs stay untracked; they can contain machine
+# network addresses.
+artifacts/*.log
+
 # Remotion demo-video build dependencies stay local.
 artifacts/demo-showcase/remotion/node_modules/
 artifacts/demo-showcase/remotion/out/

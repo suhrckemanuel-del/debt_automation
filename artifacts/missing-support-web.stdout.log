@@ -4,7 +4,7 @@
 
 ▲ Next.js 16.2.10 (Turbopack)
 - Local:         http://localhost:3000
-- Network:       http://100.87.120.113:3000
+- Network:       http://[redacted-local-network]:3000
 ✓ Ready in 507ms
 
  GET /ask?answer=bb476fa0-42f4-4281-b760-bb8946fe0beb 500 in 447ms (next.js: 210ms, application-code: 237ms)

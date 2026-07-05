@@ -40,6 +40,26 @@ against persisted document, locator, page, and exact-passage evidence before a
 status is rendered. Engine or evidence failure produces an explicit unavailable
 state rather than a fallback conclusion.
 
+## Deterministic demo reset
+
+With the app stopped and the Python engine running:
+
+```powershell
+npm run demo:reset
+```
+
+The reset refuses anything that is not the explicit local synthetic SQLite
+adapter: the backend must be `sqlite`, synthetic seeding must be enabled, the
+database path must resolve inside `apps/web/.data/`, the manifest must be the
+tracked synthetic demo manifest, and an existing database is deleted only if
+it verifiably contains nothing but the synthetic demo workspace.
+
+A row-level wipe is intentionally not used because activated manifest versions
+are protected by immutability triggers. The reset recreates the database file
+and re-runs the idempotent seed, then replays the three canonical questions
+through the live engine and full citation validation so the saved answer
+history is real engine output. `-- --base-only` skips the answer replay.
+
 ## Verification
 
 ```powershell

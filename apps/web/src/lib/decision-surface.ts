@@ -3,6 +3,7 @@ import {
   type EngineCitation,
   type EngineContractPosition,
 } from "@/lib/engine-contract";
+import { passageHref } from "@/lib/evidence-links";
 import {
   getPersistence,
   localSyntheticActor,
@@ -36,6 +37,8 @@ export interface DecisionSurface {
     detail: string;
     href: string;
     label: string;
+    /** Set when the action targets a specific persisted passage. */
+    evidencePassageId?: string;
   };
   changes: DecisionChange[];
   timeline: Array<{
@@ -212,8 +215,12 @@ function buildDecisionSurface(
         title: "Review waiver conditions before relying",
         detail:
           "Confirm the relevant Test Date and proposed transaction date against the limited waiver and distribution condition.",
-        href: `#evidence-${conditionEvidence.passageId}`,
+        href: passageHref(
+          conditionEvidence.documentId,
+          conditionEvidence.locator,
+        ),
         label: "Inspect exact waiver passage",
+        evidencePassageId: conditionEvidence.passageId,
       },
       changes: [
         {
@@ -265,8 +272,12 @@ function buildDecisionSurface(
         title: "Check for any later consent or waiver",
         detail:
           "Confirm that the tracked document set contains every later modifying document before relying.",
-        href: `#evidence-${amendmentEvidence.passageId}`,
+        href: passageHref(
+          amendmentEvidence.documentId,
+          amendmentEvidence.locator,
+        ),
         label: "Inspect amendment passage",
+        evidencePassageId: amendmentEvidence.passageId,
       },
       changes: [
         {
@@ -336,8 +347,9 @@ function buildDecisionSurface(
       title: "Review the original covenant inputs",
       detail:
         "Confirm the debt amount, valuation, and Test Date before assessing compliance.",
-      href: `#evidence-${baseEvidence.passageId}`,
+      href: passageHref(baseEvidence.documentId, baseEvidence.locator),
       label: "Inspect original passage",
+      evidencePassageId: baseEvidence.passageId,
     },
     changes: [
       {

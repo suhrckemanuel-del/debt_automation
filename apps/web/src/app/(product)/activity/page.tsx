@@ -1,10 +1,28 @@
+import Link from "next/link";
 import { Clock3 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSyntheticDashboard } from "@/lib/dashboard";
+import type { AuditEventRecord } from "@/lib/persistence/types";
 
 export const metadata = { title: "Activity" };
+
+function entityHref(event: AuditEventRecord): string | null {
+  if (!event.entityId) {
+    return null;
+  }
+  switch (event.entityType) {
+    case "answer":
+      return `/ask?answer=${encodeURIComponent(event.entityId)}`;
+    case "manifest_version":
+      return "/provision-map";
+    case "workspace":
+      return "/workspaces";
+    default:
+      return null;
+  }
+}
 
 export default function ActivityPage() {
   const snapshot = getSyntheticDashboard();
@@ -34,8 +52,22 @@ export default function ActivityPage() {
                   ) : null}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {event.entityType}
-                  {event.entityId ? ` · ${event.entityId}` : ""}
+                  {(() => {
+                    const href = entityHref(event);
+                    const label = `${event.entityType}${
+                      event.entityId ? ` · ${event.entityId}` : ""
+                    }`;
+                    return href ? (
+                      <Link
+                        href={href}
+                        className="break-all hover:text-primary hover:underline"
+                      >
+                        {label}
+                      </Link>
+                    ) : (
+                      <span className="break-all">{label}</span>
+                    );
+                  })()}
                 </p>
               </div>
               <time

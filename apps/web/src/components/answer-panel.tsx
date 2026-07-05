@@ -1,10 +1,13 @@
+import Link from "next/link";
 import {
   AlertCircle,
+  ArrowRight,
   CheckCircle2,
   FileSearch,
   Scale,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { passageHref } from "@/lib/evidence-links";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -117,6 +120,13 @@ export function AnswerPanel({ answer }: { answer: PersistedAnswer }) {
                 <blockquote className="border-l-2 border-primary/50 pl-3 text-xs leading-6 text-muted-foreground">
                   {citation.supporting_passage}
                 </blockquote>
+                <Link
+                  href={passageHref(citation.document_id, citation.locator)}
+                  className="mt-3 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  Open in document record
+                  <ArrowRight className="size-3" />
+                </Link>
               </figure>
             ))}
           </CardContent>

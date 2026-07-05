@@ -12,6 +12,7 @@
     "start": "next start",
     "start:web:synthetic": "cross-env AGREEMENT_DATA_BACKEND=sqlite AGREEMENT_SQLITE_PATH=.data/agreement-intelligence.db AGREEMENT_ALLOW_SYNTHETIC_SEED=true AGREEMENT_SYNTHETIC_MANIFEST=../../workspaces/demo/manifest.json AGREEMENT_ENGINE_API_URL=http://127.0.0.1:8765 next start",
     "start:synthetic": "concurrently --kill-others --names engine,web --prefix-colors yellow,cyan \"npm:dev:engine\" \"npm:start:web:synthetic\"",
+    "demo:reset": "cross-env AGREEMENT_DATA_BACKEND=sqlite AGREEMENT_SQLITE_PATH=.data/agreement-intelligence.db AGREEMENT_ALLOW_SYNTHETIC_SEED=true AGREEMENT_SYNTHETIC_MANIFEST=../../workspaces/demo/manifest.json AGREEMENT_ENGINE_API_URL=http://127.0.0.1:8765 tsx scripts/demo-reset.ts",
     "lint": "eslint",
     "test": "tsx --test tests/**/*.test.ts"
   },

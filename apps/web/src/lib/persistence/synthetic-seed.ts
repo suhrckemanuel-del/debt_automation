@@ -94,7 +94,7 @@ function parseSyntheticSource(sourcePath: string): SourcePassage[] {
   return passages;
 }
 
-function assertSyntheticManifest(
+export function assertSyntheticManifest(
   value: unknown,
   manifestPath: string,
 ): asserts value is SyntheticManifest {

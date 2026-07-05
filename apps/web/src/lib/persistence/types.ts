@@ -37,6 +37,45 @@ export interface DocumentRecord {
   passageCount: number;
 }
 
+export interface PassageRecord {
+  id: string;
+  locator: string;
+  page: number;
+  heading: string;
+  text: string;
+}
+
+export interface DocumentReference {
+  externalId: string;
+  title: string;
+  documentType: string;
+  relationship: "modifies" | "modified_by" | "related";
+}
+
+export interface DocumentDetail extends DocumentRecord {
+  executionDate: string;
+  sourcePath: string;
+  passages: PassageRecord[];
+  relatedDocuments: DocumentReference[];
+}
+
+export interface MappingSlotRecord {
+  slotKey: string;
+  documentExternalId: string;
+  documentTitle: string;
+  locator: string;
+  page: number;
+  exactQuote: string;
+  reviewedAt: string | null;
+}
+
+export interface ActiveMappingView {
+  manifestVersion: number;
+  activatedAt: string;
+  expectedSlotCount: number;
+  slots: MappingSlotRecord[];
+}
+
 export interface AuditEventRecord {
   id: string;
   action: string;
@@ -127,5 +166,14 @@ export interface Persistence {
     documentId: string,
     locator: string,
   ): PassageEvidence;
+  getDocumentDetail(
+    actor: ActorContext,
+    workspaceId: string,
+    documentExternalId: string,
+  ): DocumentDetail | null;
+  getActiveMappingView(
+    actor: ActorContext,
+    workspaceId: string,
+  ): ActiveMappingView | null;
   activateMappingDraft(input: ActivateMappingDraftInput): number;
 }

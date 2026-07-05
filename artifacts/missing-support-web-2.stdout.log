@@ -4,7 +4,7 @@
 
 ▲ Next.js 16.2.10 (Turbopack)
 - Local:         http://localhost:3000
-- Network:       http://100.87.120.113:3000
+- Network:       http://[redacted-local-network]:3000
 ✓ Ready in 558ms
 
  GET /dashboard?asOf=2026-07-02 200 in 641ms (next.js: 191ms, application-code: 450ms)
