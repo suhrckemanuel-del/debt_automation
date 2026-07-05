@@ -2,10 +2,12 @@ import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
+import { engineLtvCalculationSchema } from "@/lib/engine-contract";
 import { SQLITE_SCHEMA } from "./sqlite-schema";
 import { seedSyntheticDemo } from "./synthetic-seed";
 import type {
   ActivateMappingDraftInput,
+  ActiveFinancialModelView,
   ActiveMappingView,
   ActorContext,
   AuditEventRecord,
@@ -15,9 +17,11 @@ import type {
   DocumentReference,
   PassageEvidence,
   Persistence,
+  PersistedFinancialModelRun,
   PersistedAnswer,
   PersistedCitation,
   SaveAnswerInput,
+  SaveFinancialModelRunInput,
   WorkspaceRecord,
 } from "./types";
 
@@ -684,6 +688,278 @@ export class SqlitePersistence implements Persistence {
       activatedAt: String(manifest.activated_at),
       expectedSlotCount: Number(manifest.expected_slot_count ?? slots.length),
       slots,
+    };
+  }
+
+  getActiveFinancialModel(
+    actor: ActorContext,
+    workspaceId: string,
+    modelId: string,
+  ): ActiveFinancialModelView | null {
+    this.assertWorkspaceAccess(actor, workspaceId);
+    const version = this.database
+      .prepare(
+        `SELECT fmv.id, fmv.model_id, fmv.version,
+                fmv.calculation_purpose, fmv.formula, fmv.test_date,
+                fmv.evaluation_date, fmv.currency, fmv.config_json,
+                fmv.activated_at
+         FROM workspace_financial_model_heads head
+         JOIN financial_model_versions fmv ON fmv.id = head.model_version_id
+         WHERE head.workspace_id = ? AND head.model_id = ?`,
+      )
+      .get(workspaceId, modelId) as Record<string, SqlValue> | undefined;
+    if (!version) {
+      return null;
+    }
+    const inputs = this.database
+      .prepare(
+        `SELECT fmi.input_key, fmi.decimal_value, fmi.currency,
+                fmi.effective_date, fmi.exact_quote, p.locator, p.page_number,
+                p.passage_text, d.external_id, d.title
+         FROM financial_model_inputs fmi
+         JOIN passages p ON p.id = fmi.passage_id
+         JOIN documents d ON d.id = p.document_id
+         WHERE fmi.model_version_id = ?
+         ORDER BY fmi.input_key`,
+      )
+      .all(String(version.id)) as Record<string, SqlValue>[];
+    const checkedInputs = inputs.map((input) => {
+      const exactQuote = String(input.exact_quote);
+      if (!String(input.passage_text).includes(exactQuote)) {
+        throw new Error(
+          `Financial input is not an exact persisted excerpt: ${String(input.input_key)}.`,
+        );
+      }
+      return {
+        key: String(input.input_key) as "debt_amount" | "valuation_amount",
+        value: String(input.decimal_value),
+        currency: String(input.currency),
+        effectiveDate: String(input.effective_date),
+        documentExternalId: String(input.external_id),
+        documentTitle: String(input.title),
+        locator: String(input.locator),
+        page: Number(input.page_number),
+        exactQuote,
+      };
+    });
+    const config = parseJsonObject(String(version.config_json));
+    const configuredScenarios = Array.isArray(config.scenarios)
+      ? (config.scenarios as Record<string, unknown>[])
+      : [];
+    const runRows = this.database
+      .prepare(
+        `SELECT id, scenario_id, result_json, result_sha256, calculated_at
+         FROM financial_model_runs
+         WHERE workspace_id = ? AND model_version_id = ?
+         ORDER BY calculated_at DESC, id DESC`,
+      )
+      .all(workspaceId, String(version.id)) as Record<string, SqlValue>[];
+    const latestByScenario = new Map<string, PersistedFinancialModelRun>();
+    for (const row of runRows) {
+      const scenarioId = String(row.scenario_id);
+      if (latestByScenario.has(scenarioId)) {
+        continue;
+      }
+      const resultJson = String(row.result_json);
+      const persistedHash = String(row.result_sha256);
+      const computedHash = createHash("sha256")
+        .update(resultJson, "utf8")
+        .digest("hex");
+      if (computedHash !== persistedHash) {
+        throw new Error(
+          `Persisted model run hash mismatch: ${String(row.id)}.`,
+        );
+      }
+      const parsed = engineLtvCalculationSchema.parse(
+        JSON.parse(resultJson),
+      );
+      if (parsed.status !== "calculated_human_review_required") {
+        throw new Error("Persisted model run is not a calculated result.");
+      }
+      latestByScenario.set(scenarioId, {
+        id: String(row.id),
+        modelVersion: Number(version.version),
+        scenarioId,
+        result: parsed,
+        resultSha256: persistedHash,
+        calculatedAt: String(row.calculated_at),
+      });
+    }
+    return {
+      modelId: String(version.model_id),
+      version: Number(version.version),
+      calculationPurpose: String(version.calculation_purpose),
+      formula: String(version.formula),
+      testDate: String(version.test_date),
+      evaluationDate: String(version.evaluation_date),
+      currency: String(version.currency),
+      activatedAt: String(version.activated_at),
+      inputs: checkedInputs,
+      scenarios: configuredScenarios.map((scenario) => ({
+        scenarioId: String(scenario.scenario_id),
+        label: String(scenario.label),
+        rationale: String(scenario.rationale),
+      })),
+      latestRuns: [...latestByScenario.values()],
+    };
+  }
+
+  saveFinancialModelRun(
+    input: SaveFinancialModelRunInput,
+  ): PersistedFinancialModelRun {
+    const { actor, workspaceId, calculation } = input;
+    this.assertWorkspaceAccess(actor, workspaceId);
+    const active = this.database
+      .prepare(
+        `SELECT fmv.id, fmv.version, fmv.formula, fmv.test_date,
+                fmv.evaluation_date, fmv.currency
+         FROM workspace_financial_model_heads head
+         JOIN financial_model_versions fmv ON fmv.id = head.model_version_id
+         WHERE head.workspace_id = ? AND head.model_id = ?`,
+      )
+      .get(workspaceId, calculation.model_id) as
+      | {
+          id: string;
+          version: number;
+          formula: string;
+          test_date: string;
+          evaluation_date: string;
+          currency: string;
+        }
+      | undefined;
+    if (
+      !active ||
+      active.version !== calculation.model_version ||
+      active.formula !== calculation.formula.expression ||
+      active.test_date !== calculation.test_date ||
+      active.evaluation_date !== calculation.evaluation_date ||
+      active.currency !== calculation.currency
+    ) {
+      throw new Error(
+        "Calculation does not match the active financial model version.",
+      );
+    }
+
+    for (const citation of calculation.sources) {
+      const passage = this.database
+        .prepare(
+          `SELECT p.page_number, p.passage_text, d.title, d.document_type,
+                  d.source_path
+           FROM passages p
+           JOIN documents d ON d.id = p.document_id
+           WHERE p.workspace_id = ? AND d.external_id = ? AND p.locator = ?`,
+        )
+        .get(
+          workspaceId,
+          citation.document_id,
+          citation.locator,
+        ) as
+        | {
+            page_number: number;
+            passage_text: string;
+            title: string;
+            document_type: string;
+            source_path: string;
+          }
+        | undefined;
+      if (
+        !passage ||
+        passage.page_number !== citation.page ||
+        passage.title !== citation.document_title ||
+        passage.document_type !== citation.document_type ||
+        passage.source_path !== citation.source_path ||
+        !passage.passage_text.includes(citation.supporting_passage)
+      ) {
+        throw new Error(
+          `Model citation is not an exact persisted source excerpt: ${citation.document_id} ${citation.locator}.`,
+        );
+      }
+    }
+
+    const persistedInputs = this.database
+      .prepare(
+        `SELECT input_key, decimal_value, currency, effective_date
+         FROM financial_model_inputs WHERE model_version_id = ?`,
+      )
+      .all(active.id) as Array<{
+      input_key: "debt_amount" | "valuation_amount";
+      decimal_value: string;
+      currency: string;
+      effective_date: string;
+    }>;
+    for (const inputRow of persistedInputs) {
+      const sourceInput = calculation.source_inputs[inputRow.input_key];
+      if (
+        !sourceInput ||
+        sourceInput.value !== inputRow.decimal_value ||
+        sourceInput.effective_date !== inputRow.effective_date ||
+        calculation.currency !== inputRow.currency
+      ) {
+        throw new Error(
+          `Calculation source input does not match persisted ${inputRow.input_key}.`,
+        );
+      }
+    }
+
+    const runId = randomUUID();
+    const resultJson = JSON.stringify(calculation);
+    const resultSha256 = createHash("sha256")
+      .update(resultJson, "utf8")
+      .digest("hex");
+    const now = new Date().toISOString();
+    this.database.exec("BEGIN IMMEDIATE");
+    try {
+      this.database
+        .prepare(
+          `INSERT INTO financial_model_runs
+            (id, workspace_id, model_version_id, calculated_by, scenario_id,
+             result_json, result_sha256, calculated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          runId,
+          workspaceId,
+          active.id,
+          actor.userId,
+          calculation.scenario.scenario_id,
+          resultJson,
+          resultSha256,
+          now,
+        );
+      this.database
+        .prepare(
+          `INSERT INTO audit_events
+            (id, organization_id, workspace_id, actor_user_id, action,
+             entity_type, entity_id, detail_json, occurred_at)
+           VALUES (?, ?, ?, ?, 'financial_model.calculated',
+             'financial_model_run', ?, ?, ?)`,
+        )
+        .run(
+          randomUUID(),
+          actor.organizationId,
+          workspaceId,
+          actor.userId,
+          runId,
+          JSON.stringify({
+            modelId: calculation.model_id,
+            modelVersion: calculation.model_version,
+            scenarioId: calculation.scenario.scenario_id,
+            resultSha256,
+          }),
+          now,
+        );
+      this.database.exec("COMMIT");
+    } catch (error) {
+      this.database.exec("ROLLBACK");
+      throw error;
+    }
+    return {
+      id: runId,
+      modelVersion: active.version,
+      scenarioId: calculation.scenario.scenario_id,
+      result: calculation,
+      resultSha256,
+      calculatedAt: now,
     };
   }
 

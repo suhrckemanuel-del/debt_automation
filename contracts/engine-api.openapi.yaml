@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Agreement Intelligence Engine API
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     Narrow local contract around the deterministic Python engine. The engine
     retrieves and assembles source-backed answers; legal interpretation and
@@ -89,6 +89,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /v1/workspaces/{workspaceId}/models/ltv-calculations:
+    post:
+      operationId: calculateLoanToValue
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,39}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LtvCalculationRequest"
+      responses:
+        "200":
+          description: >-
+            Source-grounded deterministic calculation or an explicit
+            missing-information abstention. This is not a legal conclusion.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LtvCalculation"
+        "400":
+          description: Invalid model or scenario identifier.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Workspace not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 components:
   schemas:
     Health:
@@ -99,7 +136,127 @@ components:
         status:
           const: ok
         contract_version:
-          const: 1.1.0
+          const: 1.2.0
+    LtvCalculationRequest:
+      type: object
+      additionalProperties: false
+      required: [model_id, scenario_id]
+      properties:
+        model_id:
+          const: ltv-v1
+        scenario_id:
+          oneOf:
+            - type: string
+              minLength: 1
+              maxLength: 80
+            - type: "null"
+    LtvCalculation:
+      oneOf:
+        - $ref: "#/components/schemas/CalculatedLtv"
+        - $ref: "#/components/schemas/UnavailableLtv"
+    UnavailableLtv:
+      type: object
+      additionalProperties: false
+      required:
+        - model_id
+        - status
+        - missing_information
+        - human_review_required
+        - sources
+      properties:
+        model_id:
+          type: string
+        status:
+          const: calculation_unavailable
+        missing_information:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        human_review_required:
+          const: true
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+    CalculatedLtv:
+      type: object
+      additionalProperties: false
+      required:
+        - model_id
+        - model_version
+        - status
+        - calculation_purpose
+        - evaluation_date
+        - test_date
+        - currency
+        - scenario
+        - source_inputs
+        - calculation_inputs
+        - formula
+        - outputs
+        - selected_threshold
+        - waiver_observation
+        - assumptions
+        - missing_information
+        - human_review_required
+        - review_note
+        - sources
+      properties:
+        model_id:
+          const: ltv-v1
+        model_version:
+          type: integer
+          minimum: 1
+        status:
+          const: calculated_human_review_required
+        calculation_purpose:
+          const: covenant_test
+        evaluation_date:
+          type: string
+          format: date
+        test_date:
+          type: string
+          format: date
+        currency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        scenario:
+          type: object
+          required: [scenario_id, label, rationale]
+          properties:
+            scenario_id: { type: string }
+            label: { type: string }
+            rationale: { type: string }
+        source_inputs:
+          type: object
+        calculation_inputs:
+          type: object
+        formula:
+          type: object
+        outputs:
+          type: object
+        selected_threshold:
+          type: object
+        waiver_observation:
+          oneOf:
+            - type: object
+            - type: "null"
+        assumptions:
+          type: array
+          items: { type: string }
+        missing_information:
+          type: array
+          maxItems: 0
+        human_review_required:
+          const: true
+        review_note:
+          type: string
+        sources:
+          type: array
+          minItems: 4
+          items:
+            $ref: "#/components/schemas/Citation"
     AnswerRequest:
       type: object
       additionalProperties: false

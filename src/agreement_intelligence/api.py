@@ -10,13 +10,17 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from .engine import AgreementIntelligenceEngine
 
-CONTRACT_VERSION = "1.1.0"
+CONTRACT_VERSION = "1.2.0"
 MAX_REQUEST_BYTES = 32_768
 ANSWER_PATH = re.compile(
     r"^/v1/workspaces/(?P<workspace_id>[a-z][a-z0-9-]{1,39})/answers$"
 )
 POSITION_PATH = re.compile(
     r"^/v1/workspaces/(?P<workspace_id>[a-z][a-z0-9-]{1,39})/position$"
+)
+LTV_MODEL_PATH = re.compile(
+    r"^/v1/workspaces/(?P<workspace_id>[a-z][a-z0-9-]{1,39})"
+    r"/models/ltv-calculations$"
 )
 
 
@@ -87,7 +91,9 @@ def make_engine_api_handler(
 
         def do_POST(self) -> None:  # noqa: N802
             path = unquote(urlparse(self.path).path)
-            match = ANSWER_PATH.fullmatch(path)
+            answer_match = ANSWER_PATH.fullmatch(path)
+            model_match = LTV_MODEL_PATH.fullmatch(path)
+            match = answer_match or model_match
             if not match:
                 self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
                 return
@@ -115,16 +121,27 @@ def make_engine_api_handler(
                 payload: Any = json.loads(
                     self.rfile.read(content_length).decode("utf-8")
                 )
-                question, as_of, test_date = self._validate_payload(payload)
                 engine = AgreementIntelligenceEngine(
                     root,
                     workspace_id=match.group("workspace_id"),
                 )
-                answer = engine.answer(
-                    question,
-                    as_of=as_of,
-                    test_date=test_date,
-                )
+                if model_match:
+                    model_id, scenario_id = self._validate_model_payload(
+                        payload
+                    )
+                    result = engine.calculate_ltv(
+                        model_id=model_id,
+                        scenario_id=scenario_id,
+                    )
+                else:
+                    question, as_of, test_date = self._validate_payload(
+                        payload
+                    )
+                    result = engine.answer(
+                        question,
+                        as_of=as_of,
+                        test_date=test_date,
+                    ).to_dict()
             except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
                 self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
                 return
@@ -135,7 +152,33 @@ def make_engine_api_handler(
                 )
                 return
 
-            self._send_json(HTTPStatus.OK, answer.to_dict())
+            self._send_json(HTTPStatus.OK, result)
+
+        @staticmethod
+        def _validate_model_payload(
+            payload: Any,
+        ) -> tuple[str, str | None]:
+            if not isinstance(payload, dict):
+                raise ValueError("Request body must be a JSON object.")
+            allowed = {"model_id", "scenario_id"}
+            unknown = set(payload) - allowed
+            if unknown:
+                raise ValueError(
+                    f"Unsupported request field: {sorted(unknown)[0]}"
+                )
+            model_id = payload.get("model_id")
+            scenario_id = payload.get("scenario_id")
+            if model_id != "ltv-v1":
+                raise ValueError("model_id must be ltv-v1.")
+            if scenario_id is not None and (
+                not isinstance(scenario_id, str)
+                or not scenario_id.strip()
+                or len(scenario_id) > 80
+            ):
+                raise ValueError(
+                    "scenario_id must be a non-empty string or null."
+                )
+            return model_id, scenario_id
 
         @staticmethod
         def _validate_payload(

@@ -31,8 +31,8 @@ ready:
 - Created: _pending_
 - Fable workspace/project: _pending (omit if it exposes account details)_
 - App state used: production `npm run start:synthetic` after
-  `npm run demo:reset`; engine API v1.1.0; manifest v1; 3 documents,
-  13 passages, 3 saved answers (supported ×1, source_not_found ×1,
+  `npm run demo:reset`; engine API v1.2.0; manifest v1; 5 documents,
+  15 passages, 3 saved answers (supported ×1, source_not_found ×1,
   legal_review_required ×1).
 - Screenshots: _pending_
 - Known limitations: _pending review after capture_

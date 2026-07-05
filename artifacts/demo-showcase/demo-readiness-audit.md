@@ -37,7 +37,7 @@ The product must also:
 | Ask contract label | UI said API v1.0 while the enforced contract is v1.1.0. | Bound the badge to `ENGINE_CONTRACT_VERSION`. |
 | Workspaces | Two disabled controls suggested functionality that is outside scope. | Removed dead controls and added one working “Open decision view” action. |
 | Documents | Future hosted-storage wording distracted from the local v0 and source links only exposed metadata. | Reframed the page as tracked synthetic metadata and clarified that exact passages live with determinations. |
-| Provision Map | 9/9 reviewed slots, atomic activation, and append-only history matched persistence. | No change required. |
+| Provision Map | 10/10 reviewed slots, atomic activation, and append-only history matched persistence. | The added slot is the synthetic LTV formula definition. |
 | Activity | Answer and workspace mutations appeared newest-first. | No change required. |
 | Settings | Save worked but provided no visible completion state. | Added pending, success, and validation-error feedback. |
 | Mobile navigation | Menu opened, but stayed over the destination after selecting a route. | Made the sheet controlled and close it on navigation. |

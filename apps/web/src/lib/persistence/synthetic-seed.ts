@@ -26,12 +26,39 @@ interface ManifestProvision {
   quote: string;
 }
 
+interface ManifestFinancialModel {
+  model_id: string;
+  model_version: number;
+  calculation_purpose: string;
+  formula: string;
+  test_date: string;
+  evaluation_date: string;
+  inputs: Record<
+    "debt_amount" | "valuation_amount",
+    {
+      document_id: string;
+      locator: string;
+      quote: string;
+      value: string;
+      currency: string;
+      effective_date: string;
+    }
+  >;
+  scenarios: Array<{
+    scenario_id: string;
+    label: string;
+    rationale: string;
+  }>;
+  [key: string]: unknown;
+}
+
 interface SyntheticManifest {
   workspace_id: string;
   workspace_name: string;
   default_as_of_date: string;
   documents: ManifestDocument[];
   provisions: Record<string, Record<string, ManifestProvision>>;
+  financial_models: Record<string, ManifestFinancialModel>;
   [key: string]: unknown;
 }
 
@@ -106,7 +133,8 @@ export function assertSyntheticManifest(
     manifest.workspace_id !== "demo" ||
     !manifest.workspace_name?.toLowerCase().includes("synthetic") ||
     !Array.isArray(manifest.documents) ||
-    !manifest.provisions
+    !manifest.provisions ||
+    !manifest.financial_models
   ) {
     throw new Error(
       `Refusing to seed ${manifestPath}: expected the tracked synthetic demo manifest.`,
@@ -291,6 +319,7 @@ export function seedSyntheticDemo(
     }
 
     const snapshot = JSON.stringify(manifest);
+    const manifestVersionId = randomUUID();
     database
       .prepare(
         `INSERT INTO manifest_versions
@@ -299,7 +328,7 @@ export function seedSyntheticDemo(
          VALUES (?, ?, 1, ?, ?, ?, ?, ?)`,
       )
       .run(
-        randomUUID(),
+        manifestVersionId,
         SYNTHETIC_WORKSPACE_ID,
         SYNTHETIC_DRAFT_ID,
         snapshot,
@@ -307,6 +336,80 @@ export function seedSyntheticDemo(
         SYNTHETIC_USER_ID,
         now,
       );
+
+    for (const model of Object.values(manifest.financial_models)) {
+      const currencies = new Set(
+        Object.values(model.inputs).map((input) => input.currency),
+      );
+      if (currencies.size !== 1) {
+        throw new Error(
+          `Synthetic model ${model.model_id} input currencies must match.`,
+        );
+      }
+      const modelVersionId = randomUUID();
+      const configJson = JSON.stringify(model);
+      database
+        .prepare(
+          `INSERT INTO financial_model_versions
+            (id, workspace_id, manifest_version_id, model_id, version,
+             calculation_purpose, formula, test_date, evaluation_date,
+             currency, config_json, config_sha256, activated_by, activated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          modelVersionId,
+          SYNTHETIC_WORKSPACE_ID,
+          manifestVersionId,
+          model.model_id,
+          model.model_version,
+          model.calculation_purpose,
+          model.formula,
+          model.test_date,
+          model.evaluation_date,
+          [...currencies][0],
+          configJson,
+          sha256(configJson),
+          SYNTHETIC_USER_ID,
+          now,
+        );
+      const insertInput = database.prepare(
+        `INSERT INTO financial_model_inputs
+          (id, model_version_id, input_key, decimal_value, currency,
+           effective_date, passage_id, exact_quote)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      );
+      for (const [inputKey, input] of Object.entries(model.inputs)) {
+        const passageKey = `${input.document_id}:${input.locator}`;
+        const sourcePassage = sourcePassages.get(passageKey);
+        if (!sourcePassage?.text.includes(input.quote)) {
+          throw new Error(
+            `Financial input quote is not an exact excerpt of ${passageKey}.`,
+          );
+        }
+        insertInput.run(
+          randomUUID(),
+          modelVersionId,
+          inputKey,
+          input.value,
+          input.currency,
+          input.effective_date,
+          requiredId(passageIds, passageKey),
+          input.quote,
+        );
+      }
+      database
+        .prepare(
+          `INSERT INTO workspace_financial_model_heads
+            (workspace_id, model_id, model_version_id, updated_at)
+           VALUES (?, ?, ?, ?)`,
+        )
+        .run(
+          SYNTHETIC_WORKSPACE_ID,
+          model.model_id,
+          modelVersionId,
+          now,
+        );
+    }
     database
       .prepare(
         `INSERT INTO audit_events

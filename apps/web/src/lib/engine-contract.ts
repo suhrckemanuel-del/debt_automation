@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ENGINE_CONTRACT_VERSION = "1.1.0" as const;
+export const ENGINE_CONTRACT_VERSION = "1.2.0" as const;
 
 export const supportStatusSchema = z.enum([
   "supported",
@@ -120,6 +120,136 @@ export type EngineContractPosition = z.infer<
   typeof engineContractPositionSchema
 >;
 
+const decimalStringSchema = z
+  .string()
+  .regex(/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/);
+
+const ltvArithmeticSchema = z
+  .object({
+    debt_amount: decimalStringSchema,
+    valuation_amount: decimalStringSchema,
+    threshold_percent: decimalStringSchema,
+    ltv_percent: decimalStringSchema,
+    ltv_display: z.string().min(1),
+    headroom_percentage_points: decimalStringSchema,
+    headroom_display: z.string().min(1),
+    maximum_debt_at_threshold: decimalStringSchema,
+    debt_capacity_headroom: decimalStringSchema,
+    minimum_valuation_at_threshold: decimalStringSchema,
+    arithmetic_status: z.enum([
+      "below_selected_threshold",
+      "at_selected_threshold",
+      "above_selected_threshold",
+    ]),
+  })
+  .strict();
+
+const ltvScenarioSchema = z
+  .object({
+    scenario_id: z.string().min(1),
+    label: z.string().min(1),
+    rationale: z.string().min(1),
+  })
+  .strict();
+
+export const engineLtvCalculationSchema = z.discriminatedUnion("status", [
+  z
+    .object({
+      model_id: z.string().min(1),
+      status: z.literal("calculation_unavailable"),
+      missing_information: z.array(z.string().min(1)).min(1),
+      human_review_required: z.literal(true),
+      sources: z.array(engineCitationSchema),
+    })
+    .strict(),
+  z
+    .object({
+      model_id: z.literal("ltv-v1"),
+      model_version: z.number().int().positive(),
+      status: z.literal("calculated_human_review_required"),
+      calculation_purpose: z.literal("covenant_test"),
+      evaluation_date: z.iso.date(),
+      test_date: z.iso.date(),
+      currency: z.string().length(3),
+      scenario: ltvScenarioSchema,
+      source_inputs: z
+        .object({
+          debt_amount: z
+            .object({
+              value: decimalStringSchema,
+              effective_date: z.iso.date(),
+              document_id: z.string().min(1),
+              locator: z.string().min(1),
+            })
+            .strict(),
+          valuation_amount: z
+            .object({
+              value: decimalStringSchema,
+              effective_date: z.iso.date(),
+              document_id: z.string().min(1),
+              locator: z.string().min(1),
+            })
+            .strict(),
+        })
+        .strict(),
+      calculation_inputs: z
+        .object({
+          debt_amount: decimalStringSchema,
+          valuation_amount: decimalStringSchema,
+        })
+        .strict(),
+      formula: z
+        .object({
+          expression: z.string().min(1),
+          comparison_policy: z.literal("full_precision"),
+          display_rounding: z.string().min(1),
+          trace: z.string().min(1),
+        })
+        .strict(),
+      outputs: ltvArithmeticSchema,
+      selected_threshold: z
+        .object({
+          percent: decimalStringSchema,
+          document_id: z.string().min(1),
+          locator: z.string().min(1),
+          amendment_active: z.boolean(),
+        })
+        .strict(),
+      waiver_observation: z
+        .object({
+          relevant: z.literal(true),
+          test_date: z.iso.date(),
+          relief_above_percent: decimalStringSchema,
+          relief_up_to_percent: decimalStringSchema,
+          within_stated_numeric_range: z.boolean(),
+          does_not_amend_threshold: z.boolean(),
+        })
+        .strict()
+        .nullable(),
+      assumptions: z.array(z.string()),
+      missing_information: z.array(z.string()).length(0),
+      human_review_required: z.literal(true),
+      review_note: z.string().min(1),
+      sources: z.array(engineCitationSchema).min(4),
+    })
+    .strict(),
+]);
+
+export type EngineLtvCalculation = z.infer<
+  typeof engineLtvCalculationSchema
+>;
+export type CalculatedEngineLtv = Extract<
+  EngineLtvCalculation,
+  { status: "calculated_human_review_required" }
+>;
+
+export const engineLtvRequestSchema = z
+  .object({
+    model_id: z.literal("ltv-v1"),
+    scenario_id: z.string().trim().min(1).max(80).nullable(),
+  })
+  .strict();
+
 function getEngineBaseUrl(): string {
   const baseUrl = process.env.AGREEMENT_ENGINE_API_URL?.trim();
   if (!baseUrl) {
@@ -182,4 +312,31 @@ export async function requestEngineContractPosition(
     );
   }
   return position;
+}
+
+export async function requestEngineLtvCalculation(
+  workspaceId: string,
+  scenarioId: string | null,
+): Promise<EngineLtvCalculation> {
+  const request = engineLtvRequestSchema.parse({
+    model_id: "ltv-v1",
+    scenario_id: scenarioId,
+  });
+  const response = await fetch(
+    `${getEngineBaseUrl()}/v1/workspaces/${encodeURIComponent(workspaceId)}/models/ltv-calculations`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Engine LTV calculation failed with HTTP ${response.status}.`,
+    );
+  }
+  const payload: unknown = await response.json();
+  return engineLtvCalculationSchema.parse(payload);
 }

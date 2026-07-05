@@ -113,8 +113,8 @@ if (Test-Path -LiteralPath $corpusPath) {
             $errors.Add("Synthetic disclaimer missing from $($file.Name).")
         }
     }
-    if ($corpusFiles.Count -ne 3) {
-        $errors.Add("Expected exactly 3 Phase -1 source documents; found $($corpusFiles.Count).")
+    if ($corpusFiles.Count -ne 5) {
+        $errors.Add("Expected exactly 5 synthetic source documents (3 Phase -1 agreements plus the F-002 loan balance statement and valuation certificate); found $($corpusFiles.Count).")
     }
 }
 

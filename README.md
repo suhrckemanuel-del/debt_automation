@@ -18,6 +18,10 @@ The minimum synthetic document set is:
 2. Amendment Letter No. 1
 3. Waiver Letter
 
+The separately authorized F-002 covenant-calculator slice adds two more
+synthetic evidence records: a loan balance statement and a valuation
+certificate. It remains local and makes no legal compliance conclusion.
+
 The three workflow questions test:
 
 1. Current truth across an agreement, amendment, and waiver
@@ -52,6 +56,11 @@ npm run dev:synthetic
 The hosted data model is versioned under [`supabase`](supabase/README.md) but is
 not deployed. No cloud credentials or real agreements are part of this
 milestone.
+
+The **Covenant Model** route uses the source-backed LTV definition, immutable
+financial inputs, exact decimal arithmetic, and isolated synthetic scenarios.
+Its decision record is
+[`docs/implementation/financial_model_foundation.md`](docs/implementation/financial_model_foundation.md).
 
 `npm run demo:reset` (from `apps/web`, with the engine running) restores the
 synthetic demonstration state deterministically; see

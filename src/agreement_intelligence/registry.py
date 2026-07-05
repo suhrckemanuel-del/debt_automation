@@ -26,6 +26,9 @@ class DocumentRegistry:
         self.facility_id: str = raw["facility_id"]
         self.base_terms: list[dict[str, Any]] = raw.get("base_terms", [])
         self.provisions: dict[str, Any] = raw.get("provisions", {})
+        self.financial_models: dict[str, Any] = raw.get(
+            "financial_models", {}
+        )
         self._documents: dict[str, DocumentMetadata] = {}
 
         for item in raw["documents"]:

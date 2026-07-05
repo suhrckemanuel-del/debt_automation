@@ -5,6 +5,11 @@ from pathlib import Path
 from typing import Any
 
 from .classification import asks_for_legal_judgment, classify_query
+from .financial_model import (
+    apply_scenario,
+    calculate_ltv_arithmetic,
+    decimal_from_string,
+)
 from .hierarchy import HierarchyResolver, parse_date
 from .models import Answer, Citation, Passage
 from .parser import parse_corpus
@@ -260,6 +265,232 @@ class AgreementIntelligenceEngine:
                 source.__dict__ for source in unique_sources.values()
             ],
             "missing_information": [],
+        }
+
+    def calculate_ltv(
+        self,
+        model_id: str = "ltv-v1",
+        scenario_id: str | None = None,
+    ) -> dict[str, Any]:
+        model = next(
+            (
+                candidate
+                for candidate in self.registry.financial_models.values()
+                if candidate.get("model_id") == model_id
+            ),
+            None,
+        )
+        if model is None:
+            return {
+                "model_id": model_id,
+                "status": "calculation_unavailable",
+                "missing_information": [
+                    "Reviewed financial model definition."
+                ],
+                "human_review_required": True,
+                "sources": [],
+            }
+
+        required_mappings = {
+            "ltv.definition",
+            "ltv.base",
+            "ltv.amendment",
+            "ltv.waiver",
+        }
+        missing_mappings = [
+            item
+            for item in sorted(required_mappings)
+            if item.split(".", 1)[1]
+            not in self.registry.provisions.get(item.split(".", 1)[0], {})
+        ]
+        inputs = model.get("inputs")
+        if not isinstance(inputs, dict):
+            missing_mappings.append("financial_models.inputs")
+            inputs = {}
+        for key in ("debt_amount", "valuation_amount"):
+            if key not in inputs:
+                missing_mappings.append(f"financial_models.inputs.{key}")
+        if missing_mappings:
+            return {
+                "model_id": model_id,
+                "status": "calculation_unavailable",
+                "missing_information": [
+                    f"Reviewed source mapping: {item}"
+                    for item in missing_mappings
+                ],
+                "human_review_required": True,
+                "sources": [],
+            }
+
+        test_date = parse_date(model["test_date"])
+        evaluation_date = parse_date(model["evaluation_date"])
+        debt_input = inputs["debt_amount"]
+        valuation_input = inputs["valuation_amount"]
+        debt_date = parse_date(debt_input["effective_date"])
+        valuation_date = parse_date(valuation_input["effective_date"])
+        missing_information: list[str] = []
+        if debt_date > test_date:
+            missing_information.append(
+                "Debt amount is dated after the selected Test Date."
+            )
+        if valuation_date > test_date:
+            missing_information.append(
+                "Valuation is dated after the selected Test Date."
+            )
+        if debt_input["currency"] != valuation_input["currency"]:
+            missing_information.append(
+                "Debt and valuation currencies do not match; no sourced FX "
+                "method is available."
+            )
+        if missing_information:
+            return {
+                "model_id": model_id,
+                "status": "calculation_unavailable",
+                "missing_information": missing_information,
+                "human_review_required": True,
+                "sources": [],
+            }
+
+        scenarios = model.get("scenarios", [])
+        scenario = None
+        if scenario_id is not None:
+            scenario = next(
+                (
+                    candidate
+                    for candidate in scenarios
+                    if candidate.get("scenario_id") == scenario_id
+                ),
+                None,
+            )
+            if scenario is None:
+                raise ValueError(f"Unknown scenario_id: {scenario_id}")
+
+        position = self.hierarchy.ltv_position(
+            evaluation_date,
+            test_date=test_date,
+        )
+        debt_amount, valuation_amount, assumptions = apply_scenario(
+            debt_input["value"],
+            valuation_input["value"],
+            scenario,
+        )
+        arithmetic = calculate_ltv_arithmetic(
+            debt_amount,
+            valuation_amount,
+            str(position.threshold),
+        )
+        threshold_key = "amendment" if position.amendment_active else "base"
+        sources = [
+            self._mapped_citation("ltv", "definition"),
+            self._mapped_citation("ltv", threshold_key),
+            self._citation(
+                debt_input["document_id"],
+                debt_input["locator"],
+                debt_input["quote"],
+            ),
+            self._citation(
+                valuation_input["document_id"],
+                valuation_input["locator"],
+                valuation_input["quote"],
+            ),
+        ]
+
+        waiver_observation: dict[str, Any] | None = None
+        if position.waiver is not None:
+            waiver = position.waiver
+            ltv_value = decimal_from_string(
+                arithmetic.ltv_percent, "ltv_percent"
+            )
+            relief_above = decimal_from_string(
+                str(waiver["relief_above"]), "waiver.relief_above"
+            )
+            relief_up_to = decimal_from_string(
+                str(waiver["relief_up_to"]), "waiver.relief_up_to"
+            )
+            waiver_observation = {
+                "relevant": True,
+                "test_date": waiver["test_date"],
+                "relief_above_percent": str(waiver["relief_above"]),
+                "relief_up_to_percent": str(waiver["relief_up_to"]),
+                "within_stated_numeric_range": (
+                    relief_above < ltv_value <= relief_up_to
+                ),
+                "does_not_amend_threshold": bool(
+                    waiver["does_not_amend"]
+                ),
+            }
+            sources.append(self._mapped_citation("ltv", "waiver"))
+
+        unique_sources = {
+            (source.document_id, source.locator): source for source in sources
+        }
+        return {
+            "model_id": model["model_id"],
+            "model_version": int(model["model_version"]),
+            "status": "calculated_human_review_required",
+            "calculation_purpose": model["calculation_purpose"],
+            "evaluation_date": evaluation_date.isoformat(),
+            "test_date": test_date.isoformat(),
+            "currency": debt_input["currency"],
+            "scenario": (
+                {
+                    "scenario_id": scenario["scenario_id"],
+                    "label": scenario["label"],
+                    "rationale": scenario["rationale"],
+                }
+                if scenario is not None
+                else {
+                    "scenario_id": "baseline",
+                    "label": "Reported baseline",
+                    "rationale": "Uses only the two persisted source inputs.",
+                }
+            ),
+            "source_inputs": {
+                "debt_amount": {
+                    "value": debt_input["value"],
+                    "effective_date": debt_input["effective_date"],
+                    "document_id": debt_input["document_id"],
+                    "locator": debt_input["locator"],
+                },
+                "valuation_amount": {
+                    "value": valuation_input["value"],
+                    "effective_date": valuation_input["effective_date"],
+                    "document_id": valuation_input["document_id"],
+                    "locator": valuation_input["locator"],
+                },
+            },
+            "calculation_inputs": {
+                "debt_amount": debt_amount,
+                "valuation_amount": valuation_amount,
+            },
+            "formula": {
+                "expression": model["formula"],
+                "comparison_policy": model["comparison_policy"],
+                "display_rounding": model["display_rounding"],
+                "trace": (
+                    f"{debt_amount} / {valuation_amount} * 100 = "
+                    f"{arithmetic.ltv_percent}%"
+                ),
+            },
+            "outputs": arithmetic.to_dict(),
+            "selected_threshold": {
+                "percent": arithmetic.threshold_percent,
+                "document_id": position.threshold_document_id,
+                "locator": position.threshold_locator,
+                "amendment_active": position.amendment_active,
+            },
+            "waiver_observation": waiver_observation,
+            "assumptions": assumptions,
+            "missing_information": [],
+            "human_review_required": True,
+            "review_note": (
+                "Calculation only. A reviewer must determine legal compliance, "
+                "breach, default, waiver satisfaction, transaction permission, "
+                "and commercial consequences."
+            ),
+            "sources": [
+                source.__dict__ for source in unique_sources.values()
+            ],
         }
 
     def answer(

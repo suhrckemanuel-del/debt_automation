@@ -156,8 +156,8 @@ test("the active mapping view is read from persisted reviewed slots", () => {
   );
   assert.ok(mapping);
   assert.equal(mapping.manifestVersion, 1);
-  assert.equal(mapping.expectedSlotCount, 9);
-  assert.equal(mapping.slots.length, 9);
+  assert.equal(mapping.expectedSlotCount, 10);
+  assert.equal(mapping.slots.length, 10);
   for (const slot of mapping.slots) {
     assert.ok(slot.reviewedAt, `${slot.slotKey} must be reviewed`);
     assert.ok(slot.exactQuote.length > 0);
@@ -230,8 +230,8 @@ test("demo reset deterministically restores the synthetic base state", () => {
   };
 
   const first = resetSyntheticDemoState(options);
-  assert.equal(first.documentCount, 3);
-  assert.equal(first.passageCount, 13);
+  assert.equal(first.documentCount, 5);
+  assert.equal(first.passageCount, 15);
   assert.equal(first.activeManifestVersion, 1);
 
   // Mutate, then confirm the reset converges back to the seeded state.
@@ -243,8 +243,8 @@ test("demo reset deterministically restores the synthetic base state", () => {
   mutated.close();
 
   const second = resetSyntheticDemoState(options);
-  assert.equal(second.documentCount, 3);
-  assert.equal(second.passageCount, 13);
+  assert.equal(second.documentCount, 5);
+  assert.equal(second.passageCount, 15);
   assert.equal(second.activeManifestVersion, 1);
   const restored = SqlitePersistence.open(options.databasePath, {
     allowSyntheticSeed: false,

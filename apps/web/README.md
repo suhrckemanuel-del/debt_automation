@@ -48,6 +48,16 @@ With the app stopped and the Python engine running:
 npm run demo:reset
 ```
 
+The reset replays the three canonical agreement questions and persists the
+baseline LTV calculation plus three synthetic sensitivities through the live
+Python engine. Use `npm run demo:reset -- --base-only` to seed only documents,
+passages, mappings, and the active financial-model definition.
+
+Open `/models` for the F-002 covenant-calculator decision surface. The page
+reads only workspace-authorized persisted model versions and runs; **Refresh
+calculation** calls the narrow local Python contract and appends immutable
+results. If the engine is unavailable, prior persisted results remain readable.
+
 The reset refuses anything that is not the explicit local synthetic SQLite
 adapter: the backend must be `sqlite`, synthetic seeding must be enabled, the
 database path must resolve inside `apps/web/.data/`, the manifest must be the

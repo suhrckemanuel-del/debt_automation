@@ -194,11 +194,11 @@ class RegistryAndParserTests(unittest.TestCase):
         cls.registry = DocumentRegistry(ROOT)
         cls.passages = parse_corpus(cls.registry)
 
-    def test_registry_contains_three_documents(self) -> None:
-        self.assertEqual(len(self.registry.documents), 3)
+    def test_registry_contains_five_synthetic_documents(self) -> None:
+        self.assertEqual(len(self.registry.documents), 5)
 
     def test_parser_extracts_expected_passages(self) -> None:
-        self.assertEqual(len(self.passages), 13)
+        self.assertEqual(len(self.passages), 15)
         lookup = {
             (passage.document_id, passage.locator): passage
             for passage in self.passages

@@ -20,13 +20,13 @@ Nothing is simulated or retouched to hide missing functionality.
 1. Stop any running app instance.
 2. From `apps/web`, run the engine (`python ../../app.py api --port 8765` from
    the repo root, or leave `npm run dev:engine` for step 4).
-3. Run `npm run demo:reset` (engine must be up). Expected output: 3 documents,
-   13 passages, manifest v1, then three replayed answers —
+3. Run `npm run demo:reset` (engine must be up). Expected output: 5 documents,
+   15 passages, manifest v1, then three replayed answers —
    `supported · 3`, `source_not_found · 0`, `legal_review_required · 6`.
 4. Build and start in production mode so no dev badge appears:
    `npm run build:synthetic` then `npm run start:synthetic`.
 5. Spot-check: `/dashboard` shows "Amendment controls; waiver remains limited";
-   `/ask` lists the three canonical answers; `/provision-map` shows 9/9.
+   `/ask` lists the three canonical answers; `/provision-map` shows 10/10.
 
 ## Tour steps, guide copy, and hotspots
 

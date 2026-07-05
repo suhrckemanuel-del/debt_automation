@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   Activity,
   Building2,
+  Calculator,
   FileStack,
   Gauge,
   LibraryBig,
@@ -29,6 +30,7 @@ const items = [
   { href: "/workspaces", label: "Workspaces", icon: Building2 },
   { href: "/documents", label: "Documents", icon: FileStack },
   { href: "/provision-map", label: "Provision Map", icon: Network },
+  { href: "/models", label: "Covenant Model", icon: Calculator },
   { href: "/ask", label: "Ask", icon: MessageSquareText },
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -88,7 +90,9 @@ export function DesktopNavigation() {
           <p className="text-sm font-semibold tracking-tight">
             Agreement Intelligence
           </p>
-          <p className="text-xs text-muted-foreground">F-001 · local v0</p>
+          <p className="text-xs text-muted-foreground">
+            F-001 + F-002 · local v0
+          </p>
         </div>
       </div>
       <Separator />

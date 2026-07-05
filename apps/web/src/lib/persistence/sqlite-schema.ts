@@ -128,6 +128,91 @@ BEGIN
   SELECT RAISE(ABORT, 'manifest versions are immutable');
 END;
 
+CREATE TABLE IF NOT EXISTS financial_model_versions (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE RESTRICT,
+  manifest_version_id TEXT NOT NULL REFERENCES manifest_versions(id) ON DELETE RESTRICT,
+  model_id TEXT NOT NULL,
+  version INTEGER NOT NULL CHECK (version > 0),
+  calculation_purpose TEXT NOT NULL,
+  formula TEXT NOT NULL,
+  test_date TEXT NOT NULL,
+  evaluation_date TEXT NOT NULL,
+  currency TEXT NOT NULL CHECK (length(currency) = 3),
+  config_json TEXT NOT NULL,
+  config_sha256 TEXT NOT NULL,
+  activated_by TEXT NOT NULL REFERENCES users(id),
+  activated_at TEXT NOT NULL,
+  UNIQUE (workspace_id, model_id, version)
+);
+
+CREATE TABLE IF NOT EXISTS financial_model_inputs (
+  id TEXT PRIMARY KEY,
+  model_version_id TEXT NOT NULL REFERENCES financial_model_versions(id) ON DELETE RESTRICT,
+  input_key TEXT NOT NULL CHECK (input_key IN ('debt_amount', 'valuation_amount')),
+  decimal_value TEXT NOT NULL,
+  currency TEXT NOT NULL CHECK (length(currency) = 3),
+  effective_date TEXT NOT NULL,
+  passage_id TEXT NOT NULL REFERENCES passages(id) ON DELETE RESTRICT,
+  exact_quote TEXT NOT NULL,
+  UNIQUE (model_version_id, input_key)
+);
+
+CREATE TABLE IF NOT EXISTS workspace_financial_model_heads (
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  model_id TEXT NOT NULL,
+  model_version_id TEXT NOT NULL REFERENCES financial_model_versions(id) ON DELETE RESTRICT,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (workspace_id, model_id)
+);
+
+CREATE TABLE IF NOT EXISTS financial_model_runs (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE RESTRICT,
+  model_version_id TEXT NOT NULL REFERENCES financial_model_versions(id) ON DELETE RESTRICT,
+  calculated_by TEXT NOT NULL REFERENCES users(id),
+  scenario_id TEXT NOT NULL,
+  result_json TEXT NOT NULL,
+  result_sha256 TEXT NOT NULL,
+  calculated_at TEXT NOT NULL
+);
+
+CREATE TRIGGER IF NOT EXISTS financial_model_versions_no_update
+BEFORE UPDATE ON financial_model_versions
+BEGIN
+  SELECT RAISE(ABORT, 'financial model versions are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS financial_model_versions_no_delete
+BEFORE DELETE ON financial_model_versions
+BEGIN
+  SELECT RAISE(ABORT, 'financial model versions are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS financial_model_inputs_no_update
+BEFORE UPDATE ON financial_model_inputs
+BEGIN
+  SELECT RAISE(ABORT, 'financial model inputs are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS financial_model_inputs_no_delete
+BEFORE DELETE ON financial_model_inputs
+BEGIN
+  SELECT RAISE(ABORT, 'financial model inputs are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS financial_model_runs_no_update
+BEFORE UPDATE ON financial_model_runs
+BEGIN
+  SELECT RAISE(ABORT, 'financial model runs are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS financial_model_runs_no_delete
+BEFORE DELETE ON financial_model_runs
+BEGIN
+  SELECT RAISE(ABORT, 'financial model runs are immutable');
+END;
+
 CREATE TABLE IF NOT EXISTS answers (
   id TEXT PRIMARY KEY,
   workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
@@ -184,4 +269,6 @@ CREATE INDEX IF NOT EXISTS audit_workspace_time_idx
   ON audit_events(workspace_id, occurred_at DESC);
 CREATE INDEX IF NOT EXISTS answers_workspace_time_idx
   ON answers(workspace_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS financial_model_runs_workspace_time_idx
+  ON financial_model_runs(workspace_id, calculated_at DESC);
 `;

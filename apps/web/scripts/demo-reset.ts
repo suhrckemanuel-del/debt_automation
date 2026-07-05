@@ -10,7 +10,10 @@
  * be stopped first; SQLite files cannot be replaced while the app holds them.
  */
 import path from "node:path";
-import { requestEngineAnswer } from "../src/lib/engine-contract";
+import {
+  requestEngineAnswer,
+  requestEngineLtvCalculation,
+} from "../src/lib/engine-contract";
 import { loadPersistenceConfig } from "../src/lib/persistence/config";
 import { resetSyntheticDemoState } from "../src/lib/persistence/demo-reset";
 import { SqlitePersistence } from "../src/lib/persistence/sqlite";
@@ -77,10 +80,34 @@ async function main(): Promise<void> {
       // Distinct created_at timestamps keep newest-first ordering stable.
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
-    console.log("Canonical answer history restored through the live engine.");
+    for (const scenarioId of [
+      null,
+      "valuation-down-5",
+      "valuation-down-10",
+      "repayment-1m",
+    ]) {
+      const calculation = await requestEngineLtvCalculation(
+        "demo",
+        scenarioId,
+      );
+      if (calculation.status !== "calculated_human_review_required") {
+        throw new Error(calculation.missing_information.join(" "));
+      }
+      persistence.saveFinancialModelRun({
+        actor,
+        workspaceId: SYNTHETIC_WORKSPACE_ID,
+        calculation,
+      });
+      console.log(
+        `Calculated: ${calculation.scenario.label} · ${calculation.outputs.ltv_display} · human review required`,
+      );
+    }
+    console.log(
+      "Canonical answer history and covenant calculations restored through the live engine.",
+    );
   } catch (error) {
     console.error(
-      "Base state was restored, but answer replay failed. Start the engine " +
+      "Base state was restored, but engine replay failed. Start the engine " +
         "(python app.py api --port 8765 from the repository root) and re-run, " +
         "or pass --base-only to accept an empty answer history.",
     );

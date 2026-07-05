@@ -36,7 +36,7 @@ class EngineApiContractTests(unittest.TestCase):
             payload = json.loads(response.read())
         self.assertEqual(
             payload,
-            {"status": "ok", "contract_version": "1.1.0"},
+            {"status": "ok", "contract_version": "1.2.0"},
         )
 
     def test_position_exposes_resolved_facts_and_exact_sources(self) -> None:
@@ -101,6 +101,27 @@ class EngineApiContractTests(unittest.TestCase):
         self.assertEqual(payload["support_status"], "source_not_found")
         self.assertEqual(payload["short_answer"], "Source not found.")
         self.assertEqual(payload["sources"], [])
+
+    def test_ltv_calculation_contract_returns_trace_and_sources(self) -> None:
+        body = json.dumps(
+            {"model_id": "ltv-v1", "scenario_id": None}
+        ).encode()
+        request = Request(
+            f"{self.base_url}/v1/workspaces/demo/models/ltv-calculations",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read())
+        self.assertEqual(payload["outputs"]["ltv_percent"], "71")
+        self.assertEqual(
+            payload["outputs"]["arithmetic_status"],
+            "above_selected_threshold",
+        )
+        self.assertEqual(payload["selected_threshold"]["percent"], "70")
+        self.assertEqual(len(payload["sources"]), 5)
+        self.assertTrue(payload["human_review_required"])
 
 
 if __name__ == "__main__":

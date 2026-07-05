@@ -21,6 +21,8 @@
 
 **Distribution** means any dividend, distribution, repayment of shareholder debt, redemption of shares, or other payment or transfer of value to or for the benefit of a shareholder of the Borrower.
 
+**Loan-to-Value Ratio** means, on a Test Date, the aggregate principal amount of the Loan outstanding on that Test Date divided by the most recent Valuation delivered before or on that Test Date, expressed as a percentage.
+
 **Net Disposal Proceeds** means the cash consideration received by the Borrower for a Disposal after deducting reasonable third-party transaction costs and taxes directly attributable to that Disposal.
 
 **Permitted Disposal** means a Disposal:

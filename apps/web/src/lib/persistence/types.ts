@@ -1,4 +1,5 @@
 import type {
+  CalculatedEngineLtv,
   EngineAnswer,
   EngineCitation,
   SupportStatus,
@@ -138,6 +139,53 @@ export interface ActivateMappingDraftInput {
   snapshot: Record<string, unknown>;
 }
 
+export interface FinancialModelInputRecord {
+  key: "debt_amount" | "valuation_amount";
+  value: string;
+  currency: string;
+  effectiveDate: string;
+  documentExternalId: string;
+  documentTitle: string;
+  locator: string;
+  page: number;
+  exactQuote: string;
+}
+
+export interface FinancialModelScenarioRecord {
+  scenarioId: string;
+  label: string;
+  rationale: string;
+}
+
+export interface PersistedFinancialModelRun {
+  id: string;
+  modelVersion: number;
+  scenarioId: string;
+  result: CalculatedEngineLtv;
+  resultSha256: string;
+  calculatedAt: string;
+}
+
+export interface ActiveFinancialModelView {
+  modelId: string;
+  version: number;
+  calculationPurpose: string;
+  formula: string;
+  testDate: string;
+  evaluationDate: string;
+  currency: string;
+  activatedAt: string;
+  inputs: FinancialModelInputRecord[];
+  scenarios: FinancialModelScenarioRecord[];
+  latestRuns: PersistedFinancialModelRun[];
+}
+
+export interface SaveFinancialModelRunInput {
+  actor: ActorContext;
+  workspaceId: string;
+  calculation: CalculatedEngineLtv;
+}
+
 export interface Persistence {
   getDashboardSnapshot(
     actor: ActorContext,
@@ -175,5 +223,13 @@ export interface Persistence {
     actor: ActorContext,
     workspaceId: string,
   ): ActiveMappingView | null;
+  getActiveFinancialModel(
+    actor: ActorContext,
+    workspaceId: string,
+    modelId: string,
+  ): ActiveFinancialModelView | null;
+  saveFinancialModelRun(
+    input: SaveFinancialModelRunInput,
+  ): PersistedFinancialModelRun;
   activateMappingDraft(input: ActivateMappingDraftInput): number;
 }

@@ -70,6 +70,30 @@
           "applies_to": "2026-09-30"
         }
       ]
+    },
+    {
+      "document_id": "doc_balance_001",
+      "document_type": "loan_balance_statement",
+      "title": "Synthetic Loan Balance Statement — Facility A",
+      "source_path": "docs/phase-1/synthetic-corpus/loan_balance_statement.md",
+      "execution_date": "2026-06-30",
+      "effective_date": "2026-06-30",
+      "current_status": "current",
+      "related_document_ids": [
+        "doc_facility_001"
+      ]
+    },
+    {
+      "document_id": "doc_valuation_001",
+      "document_type": "valuation_certificate",
+      "title": "Synthetic Valuation Certificate — Facility A",
+      "source_path": "docs/phase-1/synthetic-corpus/valuation_certificate.md",
+      "execution_date": "2026-06-30",
+      "effective_date": "2026-06-30",
+      "current_status": "current",
+      "related_document_ids": [
+        "doc_facility_001"
+      ]
     }
   ],
   "base_terms": [
@@ -84,6 +108,11 @@
   ],
   "provisions": {
     "ltv": {
+      "definition": {
+        "document_id": "doc_facility_001",
+        "locator": "Clause 1.1",
+        "quote": "**Loan-to-Value Ratio** means, on a Test Date, the aggregate principal amount of the Loan outstanding on that Test Date divided by the most recent Valuation delivered before or on that Test Date, expressed as a percentage."
+      },
       "base": {
         "document_id": "doc_facility_001",
         "locator": "Clause 10.2",
@@ -133,6 +162,57 @@
         "locator": "Clause 6.4",
         "quote": "The Borrower shall apply all Net Disposal Proceeds arising from a Disposal, other than a Permitted Disposal, in mandatory prepayment of the Loan within five Business Days after receipt."
       }
+    }
+  },
+  "financial_models": {
+    "ltv_v1": {
+      "model_id": "ltv-v1",
+      "model_version": 1,
+      "calculation_purpose": "covenant_test",
+      "formula": "debt_amount / valuation_amount * 100",
+      "formula_provision": "ltv.definition",
+      "comparison_policy": "full_precision",
+      "display_rounding": "ROUND_HALF_EVEN_2DP",
+      "test_date": "2026-06-30",
+      "evaluation_date": "2026-07-02",
+      "inputs": {
+        "debt_amount": {
+          "document_id": "doc_balance_001",
+          "locator": "Section 1",
+          "quote": "The aggregate principal amount of the Loan outstanding as at 30 June 2026 was EUR 71,000,000.",
+          "value": "71000000",
+          "currency": "EUR",
+          "effective_date": "2026-06-30"
+        },
+        "valuation_amount": {
+          "document_id": "doc_valuation_001",
+          "locator": "Section 1",
+          "quote": "The Market Value of the secured property as at 30 June 2026 was EUR 100,000,000.",
+          "value": "100000000",
+          "currency": "EUR",
+          "effective_date": "2026-06-30"
+        }
+      },
+      "scenarios": [
+        {
+          "scenario_id": "valuation-down-5",
+          "label": "Valuation -5%",
+          "valuation_change_percent": "-5",
+          "rationale": "Synthetic downside sensitivity; not a sourced financial fact."
+        },
+        {
+          "scenario_id": "valuation-down-10",
+          "label": "Valuation -10%",
+          "valuation_change_percent": "-10",
+          "rationale": "Synthetic downside sensitivity; not a sourced financial fact."
+        },
+        {
+          "scenario_id": "repayment-1m",
+          "label": "EUR 1m repayment",
+          "debt_change": "-1000000",
+          "rationale": "Synthetic repayment sensitivity; not a transaction recommendation."
+        }
+      ]
     }
   }
 }
