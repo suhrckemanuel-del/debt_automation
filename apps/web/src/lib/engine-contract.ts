@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ENGINE_CONTRACT_VERSION = "1.2.0" as const;
+export const ENGINE_CONTRACT_VERSION = "1.3.0" as const;
 
 export const supportStatusSchema = z.enum([
   "supported",
@@ -312,6 +312,53 @@ export async function requestEngineContractPosition(
     );
   }
   return position;
+}
+
+export const verificationWorkbookResponseSchema = z
+  .object({
+    workbook_base64: z
+      .string()
+      .min(1)
+      .regex(/^[A-Za-z0-9+/]+={0,2}$/),
+    provenance: z
+      .object({
+        engine_version: z.string().min(1),
+        model_id: z.string().min(1),
+        model_version: z.number().int().positive(),
+        scenario_id: z.string().min(1),
+        generated_at: z.string().min(1),
+        sha256: z.string().regex(/^[a-f0-9]{64}$/),
+      })
+      .strict(),
+  })
+  .strict();
+
+export type VerificationWorkbookResponse = z.infer<
+  typeof verificationWorkbookResponseSchema
+>;
+
+export async function requestEngineVerificationWorkbook(
+  workspaceId: string,
+  calculation: CalculatedEngineLtv,
+): Promise<VerificationWorkbookResponse> {
+  const validatedCalculation = engineLtvCalculationSchema.parse(calculation);
+  const response = await fetch(
+    `${getEngineBaseUrl()}/v1/workspaces/${encodeURIComponent(workspaceId)}/models/ltv-calculations/verification-workbook`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(validatedCalculation),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Engine verification workbook request failed with HTTP ${response.status}.`,
+    );
+  }
+  const payload: unknown = await response.json();
+  return verificationWorkbookResponseSchema.parse(payload);
 }
 
 export async function requestEngineLtvCalculation(

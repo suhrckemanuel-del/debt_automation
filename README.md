@@ -61,6 +61,10 @@ The **Covenant Model** route uses the source-backed LTV definition, immutable
 financial inputs, exact decimal arithmetic, and isolated synthetic scenarios.
 Its decision record is
 [`docs/implementation/financial_model_foundation.md`](docs/implementation/financial_model_foundation.md).
+The route can export a macro-free Excel verification pack per persisted run;
+see [`docs/implementation/excel_verification_pack_decision.md`](docs/implementation/excel_verification_pack_decision.md)
+and the matching PDR. The engine's decimal values remain authoritative; the
+workbook is a reviewer cross-check.
 
 `npm run demo:reset` (from `apps/web`, with the engine running) restores the
 synthetic demonstration state deterministically; see

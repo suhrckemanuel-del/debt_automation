@@ -186,6 +186,16 @@ export interface SaveFinancialModelRunInput {
   calculation: CalculatedEngineLtv;
 }
 
+export interface RecordVerificationPackProvenanceInput {
+  actor: ActorContext;
+  workspaceId: string;
+  runId: string;
+  scenarioId: string;
+  sha256: string;
+  engineVersion: string;
+  generatedAt: string;
+}
+
 export interface Persistence {
   getDashboardSnapshot(
     actor: ActorContext,
@@ -231,5 +241,8 @@ export interface Persistence {
   saveFinancialModelRun(
     input: SaveFinancialModelRunInput,
   ): PersistedFinancialModelRun;
+  recordVerificationPackProvenance(
+    input: RecordVerificationPackProvenanceInput,
+  ): void;
   activateMappingDraft(input: ActivateMappingDraftInput): number;
 }

@@ -20,6 +20,7 @@ import type {
   PersistedFinancialModelRun,
   PersistedAnswer,
   PersistedCitation,
+  RecordVerificationPackProvenanceInput,
   SaveAnswerInput,
   SaveFinancialModelRunInput,
   WorkspaceRecord,
@@ -961,6 +962,46 @@ export class SqlitePersistence implements Persistence {
       resultSha256,
       calculatedAt: now,
     };
+  }
+
+  recordVerificationPackProvenance(
+    input: RecordVerificationPackProvenanceInput,
+  ): void {
+    const { actor, workspaceId, runId, scenarioId } = input;
+    this.assertWorkspaceAccess(actor, workspaceId);
+    const run = this.database
+      .prepare(
+        `SELECT id FROM financial_model_runs
+         WHERE id = ? AND workspace_id = ? AND scenario_id = ?`,
+      )
+      .get(runId, workspaceId, scenarioId) as { id: string } | undefined;
+    if (!run) {
+      throw new Error(
+        "Verification pack provenance must reference a persisted model run.",
+      );
+    }
+    this.database
+      .prepare(
+        `INSERT INTO audit_events
+          (id, organization_id, workspace_id, actor_user_id, action,
+           entity_type, entity_id, detail_json, occurred_at)
+         VALUES (?, ?, ?, ?, 'financial_model.verification_pack_generated',
+           'financial_model_run', ?, ?, ?)`,
+      )
+      .run(
+        randomUUID(),
+        actor.organizationId,
+        workspaceId,
+        actor.userId,
+        runId,
+        JSON.stringify({
+          scenarioId,
+          sha256: input.sha256,
+          engineVersion: input.engineVersion,
+          generatedAt: input.generatedAt,
+        }),
+        new Date().toISOString(),
+      );
   }
 
   saveAnswer(input: SaveAnswerInput): PersistedAnswer {

@@ -8,6 +8,7 @@ import {
   Scale,
 } from "lucide-react";
 import { ModelRunForm } from "@/components/model-run-form";
+import { VerificationPackDownloadForm } from "@/components/verification-pack-download-form";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -132,7 +133,10 @@ export default function FinancialModelsPage() {
             What is the LTV position on the Test Date?
           </h1>
         </div>
-        <ModelRunForm hasRun />
+        <div className="flex flex-wrap items-start gap-3">
+          <ModelRunForm hasRun />
+          <VerificationPackDownloadForm scenarioId="baseline" />
+        </div>
       </header>
 
       <section
