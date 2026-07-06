@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import re
 from http import HTTPStatus
@@ -9,8 +10,14 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from .engine import AgreementIntelligenceEngine
+from .excel_pack import (
+    WorkbookGenerationAbstained,
+    generate_verification_workbook,
+)
+from .financial_model import calculate_ltv_arithmetic, decimal_from_string
+from .hierarchy import parse_date
 
-CONTRACT_VERSION = "1.2.0"
+CONTRACT_VERSION = "1.3.0"
 MAX_REQUEST_BYTES = 32_768
 ANSWER_PATH = re.compile(
     r"^/v1/workspaces/(?P<workspace_id>[a-z][a-z0-9-]{1,39})/answers$"
@@ -22,6 +29,94 @@ LTV_MODEL_PATH = re.compile(
     r"^/v1/workspaces/(?P<workspace_id>[a-z][a-z0-9-]{1,39})"
     r"/models/ltv-calculations$"
 )
+WORKBOOK_PATH = re.compile(
+    r"^/v1/workspaces/(?P<workspace_id>[a-z][a-z0-9-]{1,39})"
+    r"/models/ltv-calculations/verification-workbook$"
+)
+
+
+def _verify_workbook_payload(
+    engine: AgreementIntelligenceEngine,
+    payload: dict[str, Any],
+) -> None:
+    """Re-verify a submitted calculation against the live corpus.
+
+    The workbook must never be generated from citations, thresholds, or
+    arithmetic that no longer match the reviewed sources. Any mismatch is a
+    ValueError, which the handler returns as HTTP 400.
+    """
+    if payload.get("status") != "calculated_human_review_required":
+        raise WorkbookGenerationAbstained(
+            "Workbook generation requires a calculated result; received "
+            f"status {payload.get('status')!r}.",
+            list(payload.get("missing_information", [])),
+        )
+    for source in payload["sources"]:
+        try:
+            passage = engine.store.get(
+                source["document_id"], source["locator"]
+            )
+        except KeyError as exc:
+            raise ValueError(
+                "Citation does not match the live corpus: "
+                f"{source['document_id']} {source['locator']}"
+            ) from exc
+        if source["supporting_passage"] not in passage.text:
+            raise ValueError(
+                "Citation passage does not match the live corpus: "
+                f"{source['document_id']} {source['locator']}"
+            )
+        if (
+            int(source["page"]) != passage.page
+            or source["passage_id"] != passage.passage_id
+            or source["document_title"] != passage.document_title
+            or source["document_type"] != passage.document_type
+        ):
+            raise ValueError(
+                "Citation metadata does not match the live corpus: "
+                f"{source['document_id']} {source['locator']}"
+            )
+    for key in ("debt_amount", "valuation_amount"):
+        reference = payload["source_inputs"][key]
+        try:
+            engine.store.get(
+                reference["document_id"], reference["locator"]
+            )
+        except KeyError as exc:
+            raise ValueError(
+                f"Source input {key} does not match the live corpus."
+            ) from exc
+
+    position = engine.hierarchy.ltv_position(
+        parse_date(payload["evaluation_date"]),
+        test_date=parse_date(payload["test_date"]),
+    )
+    threshold = payload["selected_threshold"]
+    if (
+        decimal_from_string(str(threshold["percent"]), "threshold_percent")
+        != decimal_from_string(
+            str(position.threshold), "resolved_threshold"
+        )
+        or threshold["document_id"] != position.threshold_document_id
+        or threshold["locator"] != position.threshold_locator
+        or bool(threshold["amendment_active"])
+        != bool(position.amendment_active)
+    ):
+        raise ValueError(
+            "Selected threshold does not match the resolved contractual "
+            "position for the submitted dates."
+        )
+
+    recomputed = calculate_ltv_arithmetic(
+        payload["calculation_inputs"]["debt_amount"],
+        payload["calculation_inputs"]["valuation_amount"],
+        threshold["percent"],
+    ).to_dict()
+    if recomputed != payload["outputs"]:
+        raise ValueError(
+            "Submitted outputs do not match the deterministic "
+            "recomputation of the calculation inputs."
+        )
 
 
 def _json_bytes(value: dict[str, Any]) -> bytes:
@@ -93,7 +188,8 @@ def make_engine_api_handler(
             path = unquote(urlparse(self.path).path)
             answer_match = ANSWER_PATH.fullmatch(path)
             model_match = LTV_MODEL_PATH.fullmatch(path)
-            match = answer_match or model_match
+            workbook_match = WORKBOOK_PATH.fullmatch(path)
+            match = answer_match or model_match or workbook_match
             if not match:
                 self._send_json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
                 return
@@ -125,7 +221,11 @@ def make_engine_api_handler(
                     root,
                     workspace_id=match.group("workspace_id"),
                 )
-                if model_match:
+                if workbook_match:
+                    result = self._build_verification_workbook(
+                        engine, payload
+                    )
+                elif model_match:
                     model_id, scenario_id = self._validate_model_payload(
                         payload
                     )
@@ -153,6 +253,39 @@ def make_engine_api_handler(
                 return
 
             self._send_json(HTTPStatus.OK, result)
+
+        @staticmethod
+        def _build_verification_workbook(
+            engine: AgreementIntelligenceEngine,
+            payload: Any,
+        ) -> dict[str, Any]:
+            if not isinstance(payload, dict):
+                raise ValueError("Request body must be a JSON object.")
+            try:
+                _verify_workbook_payload(engine, payload)
+                workbook_bytes, provenance = (
+                    generate_verification_workbook(
+                        payload,
+                        engine_version=CONTRACT_VERSION,
+                    )
+                )
+            except WorkbookGenerationAbstained as exc:
+                detail = "; ".join(exc.missing_information)
+                suffix = f" Missing: {detail}" if detail else ""
+                raise ValueError(
+                    f"Verification workbook refused: {exc.reason}{suffix}"
+                ) from exc
+            except (KeyError, TypeError) as exc:
+                raise ValueError(
+                    "Request body does not match the CalculatedLtv "
+                    "contract shape."
+                ) from exc
+            return {
+                "workbook_base64": base64.b64encode(
+                    workbook_bytes
+                ).decode("ascii"),
+                "provenance": provenance,
+            }
 
         @staticmethod
         def _validate_model_payload(

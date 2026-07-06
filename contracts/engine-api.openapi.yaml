@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Agreement Intelligence Engine API
-  version: 1.2.0
+  version: 1.3.0
   description: >-
     Narrow local contract around the deterministic Python engine. The engine
     retrieves and assembles source-backed answers; legal interpretation and
@@ -126,6 +126,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /v1/workspaces/{workspaceId}/models/ltv-calculations/verification-workbook:
+    post:
+      operationId: generateVerificationWorkbook
+      description: >-
+        Generates a macro-free Excel verification workbook from an
+        already-calculated LTV result. The submitted payload is re-verified
+        against the live corpus (citations, threshold resolution, and
+        deterministic arithmetic) before any bytes are produced. The
+        engine's decimal values remain authoritative; the workbook is a
+        reviewer cross-check, never a source of truth.
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9-]{1,39}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationWorkbookRequest"
+      responses:
+        "200":
+          description: >-
+            Base64-encoded macro-free workbook and its provenance. This is
+            not a legal conclusion; human review remains required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationWorkbookResponse"
+        "400":
+          description: >-
+            Invalid payload, abstaining calculation, citation mismatch,
+            threshold mismatch, or arithmetic mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Workspace not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 components:
   schemas:
     Health:
@@ -136,7 +182,7 @@ components:
         status:
           const: ok
         contract_version:
-          const: 1.2.0
+          const: 1.3.0
     LtvCalculationRequest:
       type: object
       additionalProperties: false
@@ -257,6 +303,43 @@ components:
           minItems: 4
           items:
             $ref: "#/components/schemas/Citation"
+    VerificationWorkbookRequest:
+      $ref: "#/components/schemas/CalculatedLtv"
+    VerificationWorkbookResponse:
+      type: object
+      additionalProperties: false
+      required: [workbook_base64, provenance]
+      properties:
+        workbook_base64:
+          type: string
+          contentEncoding: base64
+          description: Macro-free .xlsx bytes, base64-encoded.
+        provenance:
+          type: object
+          additionalProperties: false
+          required:
+            - engine_version
+            - model_id
+            - model_version
+            - scenario_id
+            - generated_at
+            - sha256
+          properties:
+            engine_version:
+              type: string
+            model_id:
+              type: string
+            model_version:
+              type: integer
+              minimum: 1
+            scenario_id:
+              type: string
+            generated_at:
+              type: string
+              format: date-time
+            sha256:
+              type: string
+              pattern: "^[a-f0-9]{64}$"
     AnswerRequest:
       type: object
       additionalProperties: false

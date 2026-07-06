@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+import base64
+import copy
+import hashlib
+import io
 import json
 import threading
 import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+
+from openpyxl import load_workbook
 
 from agreement_intelligence.api import make_engine_api_handler
 
@@ -36,7 +43,7 @@ class EngineApiContractTests(unittest.TestCase):
             payload = json.loads(response.read())
         self.assertEqual(
             payload,
-            {"status": "ok", "contract_version": "1.2.0"},
+            {"status": "ok", "contract_version": "1.3.0"},
         )
 
     def test_position_exposes_resolved_facts_and_exact_sources(self) -> None:
@@ -122,6 +129,103 @@ class EngineApiContractTests(unittest.TestCase):
         self.assertEqual(payload["selected_threshold"]["percent"], "70")
         self.assertEqual(len(payload["sources"]), 5)
         self.assertTrue(payload["human_review_required"])
+
+    def _calculated_ltv(self) -> dict:
+        body = json.dumps(
+            {"model_id": "ltv-v1", "scenario_id": None}
+        ).encode()
+        request = Request(
+            f"{self.base_url}/v1/workspaces/demo/models/ltv-calculations",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urlopen(request, timeout=5) as response:
+            return json.loads(response.read())
+
+    def _post_workbook(self, payload: dict) -> tuple[int, dict]:
+        request = Request(
+            f"{self.base_url}/v1/workspaces/demo/models/ltv-calculations"
+            "/verification-workbook",
+            data=json.dumps(payload).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=10) as response:
+                return response.status, json.loads(response.read())
+        except HTTPError as error:
+            return error.code, json.loads(error.read())
+
+    def test_verification_workbook_round_trip(self) -> None:
+        status, payload = self._post_workbook(self._calculated_ltv())
+        self.assertEqual(status, 200)
+        workbook_bytes = base64.b64decode(payload["workbook_base64"])
+        self.assertEqual(
+            payload["provenance"]["sha256"],
+            hashlib.sha256(workbook_bytes).hexdigest(),
+        )
+        self.assertEqual(payload["provenance"]["scenario_id"], "baseline")
+        book = load_workbook(io.BytesIO(workbook_bytes))
+        self.assertEqual(
+            book.sheetnames,
+            [
+                "Summary",
+                "Inputs",
+                "Calculation",
+                "Parity",
+                "Threshold resolution",
+            ],
+        )
+        self.assertEqual(book["Summary"]["B7"].value, "71.00%")
+
+    def test_verification_workbook_endpoint_rejects_abstaining_payload(
+        self,
+    ) -> None:
+        status, payload = self._post_workbook(
+            {
+                "model_id": "ltv-v1",
+                "status": "calculation_unavailable",
+                "missing_information": [
+                    "Reviewed financial model definition."
+                ],
+                "human_review_required": True,
+                "sources": [],
+            }
+        )
+        self.assertEqual(status, 400)
+        self.assertIn("refused", payload["error"])
+        self.assertIn(
+            "Reviewed financial model definition.", payload["error"]
+        )
+        self.assertNotIn("workbook_base64", payload)
+
+    def test_verification_workbook_endpoint_rejects_tampered_citation(
+        self,
+    ) -> None:
+        tampered = copy.deepcopy(self._calculated_ltv())
+        tampered["sources"][0]["supporting_passage"] = (
+            "This text does not appear in the corpus."
+        )
+        status, payload = self._post_workbook(tampered)
+        self.assertEqual(status, 400)
+        self.assertIn("does not match the live corpus", payload["error"])
+        self.assertNotIn("workbook_base64", payload)
+
+    def test_verification_workbook_rejects_waiver_relabelled_as_threshold(
+        self,
+    ) -> None:
+        tampered = copy.deepcopy(self._calculated_ltv())
+        tampered["selected_threshold"]["percent"] = (
+            tampered["waiver_observation"]["relief_up_to_percent"]
+        )
+        status, payload = self._post_workbook(tampered)
+        self.assertEqual(status, 400)
+        self.assertIn(
+            "does not match the resolved contractual position",
+            payload["error"],
+        )
+        self.assertNotIn("workbook_base64", payload)
 
 
 if __name__ == "__main__":
