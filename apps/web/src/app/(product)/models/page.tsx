@@ -45,6 +45,12 @@ function scenarioTone(status: string): string {
   return "text-amber-300";
 }
 
+function scenarioStatusTitle(status: string): string {
+  if (status === "below_selected_threshold") return "Below selected threshold";
+  if (status === "at_selected_threshold") return "At selected threshold";
+  return "Above selected threshold";
+}
+
 export default function FinancialModelsPage() {
   const model = getPersistence().getActiveFinancialModel(
     localSyntheticActor,
@@ -121,6 +127,18 @@ export default function FinancialModelsPage() {
       result: result!,
     })),
   ];
+  const arithmeticStatus = baseline.outputs.arithmetic_status;
+  const StatusIcon =
+    arithmeticStatus === "above_selected_threshold" ? CircleAlert : Check;
+  const selectedThresholdDisplay = `${Number(
+    baseline.outputs.threshold_percent,
+  ).toFixed(2)}%`;
+  const headroom = Number(baseline.outputs.headroom_percentage_points);
+  const headroomMagnitude = Math.abs(headroom).toFixed(2);
+  const statusMessage =
+    arithmeticStatus === "at_selected_threshold"
+      ? `Calculated LTV is ${baseline.outputs.ltv_display}. It is exactly at the sourced ${selectedThresholdDisplay} threshold.`
+      : `Calculated LTV is ${baseline.outputs.ltv_display}. It is ${headroomMagnitude} percentage point ${headroom < 0 ? "above" : "below"} the sourced ${selectedThresholdDisplay} threshold.`;
 
   return (
     <div className="space-y-10">
@@ -146,17 +164,28 @@ export default function FinancialModelsPage() {
         <div className="py-6 lg:pr-8">
           <p className="text-sm text-muted-foreground">Current status</p>
           <div className="mt-3 flex items-start gap-3">
-            <span className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-amber-400/15 text-amber-300">
-              <CircleAlert className="size-4" />
+            <span
+              className={cn(
+                "mt-1 flex size-6 shrink-0 items-center justify-center rounded-full",
+                arithmeticStatus === "above_selected_threshold"
+                  ? "bg-amber-400/15 text-amber-300"
+                  : "bg-primary/15 text-primary",
+              )}
+            >
+              <StatusIcon className="size-4" />
             </span>
             <div>
-              <h2 id="model-status" className="text-xl font-semibold">
-                Above selected threshold
+              <h2
+                id="model-status"
+                className={cn(
+                  "text-xl font-semibold",
+                  scenarioTone(arithmeticStatus),
+                )}
+              >
+                {scenarioStatusTitle(arithmeticStatus)}
               </h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {`Calculated LTV is ${baseline.outputs.ltv_display}. It is ${Math.abs(
-                  Number(baseline.outputs.headroom_percentage_points),
-                ).toFixed(2)} percentage point above the sourced 70.00% threshold.`}
+                {statusMessage}
               </p>
             </div>
           </div>

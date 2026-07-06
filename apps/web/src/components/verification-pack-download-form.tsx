@@ -37,20 +37,28 @@ export function VerificationPackDownloadForm({
     ) {
       return;
     }
-    lastDownloadRef.current = state.completedAt;
-    const binary = atob(state.workbookBase64);
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index += 1) {
-      bytes[index] = binary.charCodeAt(index);
+    let url: string | null = null;
+    try {
+      const binary = atob(state.workbookBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+      url = URL.createObjectURL(new Blob([bytes], { type: WORKBOOK_MIME }));
+      const downloadUrl = url;
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = state.filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      lastDownloadRef.current = state.completedAt;
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+    } catch {
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
     }
-    const url = URL.createObjectURL(new Blob([bytes], { type: WORKBOOK_MIME }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = state.filename;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
   }, [state.workbookBase64, state.filename, state.completedAt]);
 
   return (

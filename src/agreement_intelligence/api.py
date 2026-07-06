@@ -51,6 +51,18 @@ def _verify_workbook_payload(
             f"status {payload.get('status')!r}.",
             list(payload.get("missing_information", [])),
         )
+    scenario = payload["scenario"]
+    scenario_id = scenario["scenario_id"]
+    live_scenario_id = None if scenario_id == "baseline" else scenario_id
+    live_calculation = engine.calculate_ltv(
+        model_id=payload["model_id"],
+        scenario_id=live_scenario_id,
+    )
+    if live_calculation.get("status") != "calculated_human_review_required":
+        raise WorkbookGenerationAbstained(
+            "Live model calculation is unavailable for workbook generation.",
+            list(live_calculation.get("missing_information", [])),
+        )
     for source in payload["sources"]:
         try:
             passage = engine.store.get(
@@ -78,6 +90,20 @@ def _verify_workbook_payload(
             )
     for key in ("debt_amount", "valuation_amount"):
         reference = payload["source_inputs"][key]
+        live_reference = live_calculation["source_inputs"][key]
+        if reference != live_reference:
+            raise ValueError(
+                f"Source input {key} does not match the live "
+                "source-grounded model."
+            )
+        if (
+            payload["calculation_inputs"][key]
+            != live_calculation["calculation_inputs"][key]
+        ):
+            raise ValueError(
+                f"Calculation input {key} does not match the live "
+                "source-grounded model."
+            )
         try:
             engine.store.get(
                 reference["document_id"], reference["locator"]

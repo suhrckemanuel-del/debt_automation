@@ -144,7 +144,7 @@ may add them, out of scope here):
 | Row | Label | Formula | Format |
 |---|---|---|---|
 | 2 | LTV % | `=Inputs!C2/Inputs!C3*100` | `0.00"%"` |
-| 3 | Headroom (pp) | `=Inputs!C4-Calculation!B2` | `0.00"%"` |
+| 3 | Headroom (pp) | `=Inputs!C4-Calculation!B2` | `0.00" pp"` |
 | 4 | Maximum debt at threshold | `=Inputs!C3*(Inputs!C4/100)` | `#,##0.00` |
 | 5 | Debt capacity headroom | `=B4-Inputs!C2` | `#,##0.00` |
 | 6 | Minimum valuation at threshold | `=Inputs!C2/(Inputs!C4/100)` | `#,##0.00` |
@@ -528,7 +528,7 @@ One-to-one against the decision record's Acceptance section, all in
 | Parity delta zero for synthetic baseline | `test_parity_delta_zero_for_baseline_metrics`: for `ltv_percent`, `headroom_percentage_points`, `maximum_debt_at_threshold`, `debt_capacity_headroom` assert the Parity sheet's delta cell evaluates to `0` (using `openpyxl` with `data_only=False`, recomputing the formula independently in the test with Python floats, since `openpyxl` does not evaluate formulas on load). `test_parity_minimum_valuation_is_labelled_artifact`: assert `minimum_valuation_at_threshold`'s delta is non-zero and its classification cell reads "Floating-point / precision artifact" — this is the documented exception from §2, not a regression. |
 | No macros, no external references | `test_workbook_has_no_macro_or_external_link_parts`: open the produced bytes as a zip (`zipfile.ZipFile(io.BytesIO(...))`), assert `"xl/vbaProject.bin"` and any `"xl/externalLinks/"` member are absent; assert `openpyxl.load_workbook(..., keep_vba=False)` round-trips without a `vba_archive`. |
 | Citations match persisted payload exactly | `test_inputs_sheet_citations_match_payload`: for each of debt/valuation/threshold/definition, assert the Inputs-sheet row's document title, locator, page, passage ID, and exact quote equal the corresponding fields in the input `calculation` dict verbatim. |
-| 72.0% waiver ceiling never in a threshold-labelled cell | `test_waiver_ceiling_never_in_threshold_cell`: scan every worksheet for any cell in a row/column whose header contains "Threshold" (case-insensitive); assert none holds `"72"` or a string containing `"72.00%"`. Run against the real baseline payload (`relief_up_to_percent == "72"`), not a synthetic fixture, so the test fails if a future edit ever mislabels the cell. |
+| 72.0% waiver ceiling never in a threshold-labelled cell | `test_waiver_ceiling_never_in_threshold_cell`: scan every worksheet for any true threshold-labelled cell, excluding the intentional waiver observation row/section (`relief_up_to_percent == "72"`); assert no threshold cell holds `"72"` or a string containing `"72.00%"`. Run against the real baseline payload, not a synthetic fixture, so the test fails if a future edit ever mislabels the waiver ceiling as the selected threshold. |
 | Abstaining model versions refuse generation with a typed reason | `test_calculation_unavailable_payload_raises_typed_abstention`: pass an `UnavailableLtv`-shaped dict (`status: "calculation_unavailable"`), assert `WorkbookGenerationAbstained` is raised and `.missing_information` matches the input's `missing_information`. |
 | Existing checks continue to pass | Not a new test — CI/manual gate: `python -m unittest discover`, the web test suite (`node --test` per `apps/web/tests/*.test.ts`), and the existing benchmark/citation checks referenced by `AGENTS.md`, run unmodified. |
 

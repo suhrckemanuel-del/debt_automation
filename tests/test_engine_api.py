@@ -15,6 +15,7 @@ from urllib.request import Request, urlopen
 from openpyxl import load_workbook
 
 from agreement_intelligence.api import make_engine_api_handler
+from agreement_intelligence.financial_model import calculate_ltv_arithmetic
 
 
 class EngineApiContractTests(unittest.TestCase):
@@ -210,6 +211,24 @@ class EngineApiContractTests(unittest.TestCase):
         status, payload = self._post_workbook(tampered)
         self.assertEqual(status, 400)
         self.assertIn("does not match the live corpus", payload["error"])
+        self.assertNotIn("workbook_base64", payload)
+
+    def test_verification_workbook_endpoint_rejects_tampered_calculation_input(
+        self,
+    ) -> None:
+        tampered = copy.deepcopy(self._calculated_ltv())
+        tampered["calculation_inputs"]["debt_amount"] = "70000000"
+        tampered["outputs"] = calculate_ltv_arithmetic(
+            tampered["calculation_inputs"]["debt_amount"],
+            tampered["calculation_inputs"]["valuation_amount"],
+            tampered["selected_threshold"]["percent"],
+        ).to_dict()
+        status, payload = self._post_workbook(tampered)
+        self.assertEqual(status, 400)
+        self.assertIn(
+            "Calculation input debt_amount does not match",
+            payload["error"],
+        )
         self.assertNotIn("workbook_base64", payload)
 
     def test_verification_workbook_rejects_waiver_relabelled_as_threshold(
