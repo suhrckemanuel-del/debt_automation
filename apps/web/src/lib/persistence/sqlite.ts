@@ -749,10 +749,10 @@ export class SqlitePersistence implements Persistence {
       : [];
     const runRows = this.database
       .prepare(
-        `SELECT id, scenario_id, result_json, result_sha256, calculated_at
+        `SELECT rowid, id, scenario_id, result_json, result_sha256, calculated_at
          FROM financial_model_runs
          WHERE workspace_id = ? AND model_version_id = ?
-         ORDER BY calculated_at DESC, id DESC`,
+         ORDER BY calculated_at DESC, rowid DESC`,
       )
       .all(workspaceId, String(version.id)) as Record<string, SqlValue>[];
     const latestByScenario = new Map<string, PersistedFinancialModelRun>();

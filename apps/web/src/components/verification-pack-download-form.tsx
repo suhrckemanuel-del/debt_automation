@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   downloadVerificationPack,
   type VerificationPackActionState,
@@ -27,6 +27,10 @@ export function VerificationPackDownloadForm({
     initialState,
   );
   const lastDownloadRef = useRef<string | null>(null);
+  const [downloadError, setDownloadError] = useState<{
+    completedAt: string;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     if (
@@ -58,20 +62,34 @@ export function VerificationPackDownloadForm({
       if (url) {
         URL.revokeObjectURL(url);
       }
+      const completedAt = state.completedAt;
+      window.setTimeout(() => {
+        setDownloadError({
+          completedAt,
+          message:
+            "Workbook was generated, but the browser could not prepare the download. Try again.",
+        });
+      }, 0);
     }
   }, [state.workbookBase64, state.filename, state.completedAt]);
+
+  const visibleError =
+    state.error ??
+    (downloadError?.completedAt === state.completedAt
+      ? downloadError.message
+      : null);
 
   return (
     <div>
       <form action={action}>
         <VerificationPackDownloadButton />
       </form>
-      {state.error ? (
+      {visibleError ? (
         <p
           role="alert"
           className="mt-2 max-w-sm text-xs leading-5 text-destructive"
         >
-          {state.error}
+          {visibleError}
         </p>
       ) : state.completedAt ? (
         <p role="status" className="mt-2 text-xs text-muted-foreground">

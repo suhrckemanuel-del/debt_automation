@@ -51,6 +51,18 @@ function scenarioStatusTitle(status: string): string {
   return "Above selected threshold";
 }
 
+function formatPercent(value: string): string {
+  return `${Number(value).toFixed(2)}%`;
+}
+
+function formatIsoDate(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00Z`));
+}
+
 export default function FinancialModelsPage() {
   const model = getPersistence().getActiveFinancialModel(
     localSyntheticActor,
@@ -130,15 +142,21 @@ export default function FinancialModelsPage() {
   const arithmeticStatus = baseline.outputs.arithmetic_status;
   const StatusIcon =
     arithmeticStatus === "above_selected_threshold" ? CircleAlert : Check;
-  const selectedThresholdDisplay = `${Number(
+  const selectedThresholdDisplay = formatPercent(
     baseline.outputs.threshold_percent,
-  ).toFixed(2)}%`;
+  );
   const headroom = Number(baseline.outputs.headroom_percentage_points);
   const headroomMagnitude = Math.abs(headroom).toFixed(2);
   const statusMessage =
     arithmeticStatus === "at_selected_threshold"
       ? `Calculated LTV is ${baseline.outputs.ltv_display}. It is exactly at the sourced ${selectedThresholdDisplay} threshold.`
       : `Calculated LTV is ${baseline.outputs.ltv_display}. It is ${headroomMagnitude} percentage point ${headroom < 0 ? "above" : "below"} the sourced ${selectedThresholdDisplay} threshold.`;
+  const waiverCeilingDisplay = baseline.waiver_observation
+    ? formatPercent(baseline.waiver_observation.relief_up_to_percent)
+    : null;
+  const waiverDateDisplay = formatIsoDate(
+    baseline.waiver_observation?.test_date ?? model.testDate,
+  );
 
   return (
     <div className="space-y-10">
@@ -198,7 +216,7 @@ export default function FinancialModelsPage() {
               <Check className="mt-0.5 size-4 text-primary" />
               <div>
                 <p className="text-sm font-medium">
-                  Amendment lifts 65.00% to 70.00%
+                  Selected threshold is {selectedThresholdDisplay}
                 </p>
                 {threshold ? (
                   <Link
@@ -217,10 +235,13 @@ export default function FinancialModelsPage() {
               <Check className="mt-0.5 size-4 text-primary" />
               <div>
                 <p className="text-sm font-medium">
-                  One-date waiver range reaches 72.00%
+                  {waiverCeilingDisplay
+                    ? `One-date waiver range reaches ${waiverCeilingDisplay}`
+                    : "No waiver range is active for this run"}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Relevant to 30 June 2026; it does not amend the threshold.
+                  Relevant to {waiverDateDisplay}; it does not amend the
+                  threshold.
                 </p>
                 {waiver ? (
                   <Link

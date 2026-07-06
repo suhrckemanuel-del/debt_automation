@@ -34,7 +34,7 @@ create table public.financial_model_inputs (
   input_key text not null
     check (input_key in ('debt_amount', 'valuation_amount')),
   decimal_value text not null
-    check (decimal_value ~ '^-?(0|[1-9][0-9]*)(\.[0-9]+)?$'),
+    check (decimal_value ~ '^(0|[1-9][0-9]*)(\.[0-9]+)?$'),
   currency text not null check (currency ~ '^[A-Z]{3}$'),
   effective_date date not null,
   passage_id uuid not null,
