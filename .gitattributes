@@ -1,0 +1,9 @@
+# Container/shell files MUST keep LF endings or they break inside the Linux
+# image (a CRLF shebang yields "bad interpreter"). autocrlf is true on some
+# dev machines, so pin these explicitly.
+*.sh text eol=lf
+deploy/docker-entrypoint.sh text eol=lf
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+.dockerignore text eol=lf
+.env.example text eol=lf

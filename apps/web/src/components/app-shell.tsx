@@ -25,7 +25,7 @@ export function AppShell({
           <div className="flex items-center gap-2">
             <span className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
               <span className="size-1.5 rounded-full bg-primary" />
-              Local synthetic data
+              Synthetic demo — no real data
             </span>
             <Separator orientation="vertical" className="mx-1 h-6" />
             <Avatar className="size-8 border">

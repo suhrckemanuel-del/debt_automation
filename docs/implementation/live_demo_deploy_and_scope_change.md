@@ -38,9 +38,9 @@ For "send the guy a link soon," **start with Option 1** (least drift from the ve
 
 ---
 
-## Part B — Scope-change decision record (DRAFT — NOT APPROVED)
+## Part B — Scope-change decision record (APPROVED 2026-07-18)
 
-**Proposed decision:** Lift the "no cloud deployment" boundary **only** for a **synthetic-only** demo reachable by URL. Nothing else changes.
+**Decision (approved):** Lift the "no cloud deployment" boundary **only** for a **synthetic-only** demo reachable by URL. Nothing else changes.
 
 **Stays fixed (unchanged non-negotiables):**
 - Synthetic data only. No real agreements, entity names, deal terms, credentials, or non-public information — ever, on the hosted demo.

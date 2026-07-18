@@ -1,0 +1,52 @@
+# Keep the build context small and free of local/host artifacts and secrets.
+
+# Node / Next build outputs (rebuilt inside the image)
+apps/web/node_modules/
+apps/web/.next/
+apps/web/test-results/
+apps/web/playwright-report/
+
+# Local synthetic persistence (seeded fresh on a mounted volume at runtime)
+apps/web/.data/
+
+# Any local env files — never bake secrets into the image
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python runtime artifacts
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Git and IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Local logs, screenshots, scratch
+artifacts/*.log
+.playwright-mcp/
+*.png
+
+# Local pilot workspaces (only the synthetic demo workspace ships)
+workspaces/*
+!workspaces/demo/
+!workspaces/demo/manifest.json
+
+# Docs are not needed in the image EXCEPT the synthetic corpus the seed reads
+docs/phase-1/evidence_log.csv
+docs/phase-1/outreach_tracker.csv
+docs/phase-1/sessions/
+docs/phase-1/private/
