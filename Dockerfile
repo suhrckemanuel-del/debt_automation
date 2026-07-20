@@ -12,8 +12,10 @@
 
 FROM node:22-bookworm
 
-ENV NODE_ENV=production \
-    PYTHONDONTWRITEBYTECODE=1 \
+# NODE_ENV is intentionally NOT set to production yet: `npm ci` and
+# `next build` below need devDependencies installed (cross-env, typescript,
+# tailwindcss, etc.). It is set after the build completes, for runtime only.
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     NEXT_TELEMETRY_DISABLED=1
 
@@ -48,7 +50,8 @@ RUN cd apps/web && npm run build:synthetic \
 # Runtime volume for the synthetic SQLite database.
 VOLUME ["/app/apps/web/.data"]
 
-ENV PORT=3000 \
+ENV NODE_ENV=production \
+    PORT=3000 \
     AGREEMENT_ENGINE_PORT=8765 \
     AGREEMENT_DATA_BACKEND=sqlite \
     AGREEMENT_SQLITE_PATH=/app/apps/web/.data/agreement-intelligence.db \
